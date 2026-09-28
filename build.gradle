@@ -1,0 +1,93 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+
+/*
+ * Sjodur – root build
+ *
+ *   ./gradlew dev      backend (bootRun) + frontend (pnpm dev) side by side, Ctrl+C stops both
+ *   ./gradlew check    backend tests + frontend lint and unit tests
+ *   ./gradlew build    both production builds
+ *   ./gradlew clean    removes backend/build and frontend/dist
+ *
+ * The backend is an included build (see settings.gradle); the frontend is driven through pnpm.
+ */
+
+plugins {
+    id 'base'
+}
+
+def backend = gradle.includedBuild('backend')
+def frontendDir = layout.projectDirectory.dir('frontend')
+def pnpm = Os.isFamily(Os.FAMILY_WINDOWS) ? 'pnpm.cmd' : 'pnpm'
+
+// ---------------------------------------------------------------------------
+// Frontend
+// ---------------------------------------------------------------------------
+
+tasks.register('frontendInstall', Exec) {
+    group = 'frontend'
+    description = 'Installs frontend dependencies (pnpm install --frozen-lockfile).'
+    workingDir frontendDir
+    commandLine pnpm, 'install', '--frozen-lockfile'
+    inputs.files(frontendDir.file('package.json'), frontendDir.file('pnpm-lock.yaml'))
+    outputs.file(frontendDir.file('node_modules/.modules.yaml'))
+}
+
+tasks.register('frontendDev', Exec) {
+    group = 'frontend'
+    description = 'Runs the Vike dev server on http://localhost:3000 (blocks until stopped).'
+    dependsOn 'frontendInstall'
+    workingDir frontendDir
+    commandLine pnpm, 'dev'
+    outputs.upToDateWhen { false }
+}
+
+tasks.register('frontendLint', Exec) {
+    group = 'frontend'
+    description = 'Runs ESLint.'
+    dependsOn 'frontendInstall'
+    workingDir frontendDir
+    commandLine pnpm, 'lint'
+}
+
+tasks.register('frontendTest', Exec) {
+    group = 'frontend'
+    description = 'Runs Vitest unit and component tests.'
+    dependsOn 'frontendInstall'
+    workingDir frontendDir
+    commandLine pnpm, 'test'
+}
+
+tasks.register('frontendBuild', Exec) {
+    group = 'frontend'
+    description = 'Creates the production build in frontend/dist.'
+    dependsOn 'frontendInstall'
+    workingDir frontendDir
+    commandLine pnpm, 'build'
+    inputs.files(fileTree(frontendDir) {
+        exclude 'node_modules/**', 'dist/**', 'test-results/**', 'playwright-report/**'
+    })
+    outputs.dir(frontendDir.dir('dist'))
+}
+
+// ---------------------------------------------------------------------------
+// Aggregates
+// ---------------------------------------------------------------------------
+
+tasks.register('dev') {
+    group = 'sjodur'
+    description = 'Starts backend and frontend together (needs org.gradle.parallel=true). Ctrl+C stops both.'
+    dependsOn 'frontendDev', backend.task(':bootRun')
+}
+
+tasks.named('check') {
+    dependsOn 'frontendLint', 'frontendTest', backend.task(':check')
+}
+
+tasks.named('build') {
+    dependsOn 'frontendBuild', backend.task(':build')
+}
+
+tasks.named('clean') {
+    dependsOn backend.task(':clean')
+    delete frontendDir.dir('dist')
+}

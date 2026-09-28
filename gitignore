@@ -1,0 +1,10 @@
+# Gradle (root build)
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDEs and OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
