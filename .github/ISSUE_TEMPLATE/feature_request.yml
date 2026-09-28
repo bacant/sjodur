@@ -1,0 +1,57 @@
+name: Feature request
+description: Propose an improvement or a new capability
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea. For anything larger than a small enhancement, please start a [Discussion](../discussions) first so the shape of the change can be agreed on before anyone writes code.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you start
+      options:
+        - label: I searched existing issues and discussions and found nothing that covers this
+          required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Budget book (accounts, categories, transactions, imports)
+        - Forecast (projections, scenarios, alerts)
+        - Investments (portfolios, savings plans, prices)
+        - Mobile app
+        - API / integrations
+        - Accessibility / i18n
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation you are in and what is hard or impossible today. Focus on the problem, not the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you like it to work? Sketches, examples from other tools and rough UI ideas are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other ways to solve the problem, including workarounds you use today
+  - type: dropdown
+    id: willing
+    attributes:
+      label: Would you be willing to work on this?
+      options:
+        - "Yes, I can open a pull request"
+        - "Yes, with some guidance"
+        - "No, just proposing"

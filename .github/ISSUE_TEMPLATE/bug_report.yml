@@ -1,0 +1,82 @@
+name: Bug report
+description: Something does not work as expected
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. The more precise the report, the faster it gets fixed.
+        **Security vulnerabilities must not be reported here** – see [SECURITY.md](../blob/main/SECURITY.md).
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you start
+      options:
+        - label: I searched existing issues and discussions and found nothing that covers this
+          required: true
+        - label: This is not a security vulnerability
+          required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Backend / API
+        - Web frontend
+        - Mobile app
+        - Docs / build / infrastructure
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: A release tag, or the commit hash of `main` you are running
+      placeholder: e.g. v0.3.1 or a1b2c3d
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Describe the bug and its impact. Screenshots are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, browser or device, Java and Node versions, database version – whatever applies
+      placeholder: |
+        OS: macOS 15
+        Browser: Firefox 140
+        Java: 21.0.4 (Temurin)
+        Node: 22.11
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error output
+      description: Paste relevant log lines or stack traces. Remove anything personal or financial.
+      render: shell
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Related issues, workarounds you found, a guess at the cause
