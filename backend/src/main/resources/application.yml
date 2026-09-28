@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: sjodur
+  profiles:
+    default: local            # gilt, solange kein anderes Profil gesetzt ist
+  docker:
+    compose:
+      file: ../infra/docker-compose.yml
+      lifecycle-management: start-only   # Datenbank weiterlaufen lassen, wenn die App stoppt
+  datasource:
+    url: ${SJODUR_DB_URL:jdbc:postgresql://localhost:5432/sjodur}
+    username: ${SJODUR_DB_USER:sjodur}
+    password: ${SJODUR_DB_PASSWORD:sjodur}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate      # Schema kommt ausschließlich aus Flyway-Migrationen
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
