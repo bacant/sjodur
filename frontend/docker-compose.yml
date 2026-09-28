@@ -1,0 +1,14 @@
+# Runs the frontend container alone. In the full stack (see ../infra) the backend
+# is reachable as "backend"; override SJODUR_API_URL for other setups.
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SJODUR_API_URL=${SJODUR_API_URL:-http://backend:8080}
+    restart: unless-stopped
