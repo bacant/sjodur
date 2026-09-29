@@ -53,6 +53,10 @@ The brand typeface Schibsted Grotesk is self-hosted through `@fontsource-variabl
 
 Logo files come from the brand package (`docs/brand/` in the repository root); the horizontal lockup and its inverse for dark mode are in `public/brand/` and rendered by `components/BrandLogo.vue`. Store icons and favicons are in `public/`.
 
+## Authentication
+
+`server/auth/` is the OpenID Connect "backend for frontend": `/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`, a session store (memory or Redis), and the `/api` proxy that attaches the Bearer token and refreshes it. Pages get `pageContext.user`; `/app/**` is protected by `pages/app/+guard.ts`. Configuration lives in `.env` (see `.env.example`); the full picture is in `../docs/auth.md`.
+
 ## Internationalisation
 
 UI text goes through vue-i18n (`useI18n()` → `t("home.title")`). German is the default, English the fallback; `locales/de.ts` defines the message schema and `locales/en.ts` is typed against it, so a missing key fails at type-check time. Number and currency formatting uses `Intl` with the locale mapped in `lib/i18n.ts`.

@@ -11,6 +11,7 @@
             {{ t("app.status") }}
           </span>
           <LocaleSwitch />
+          <UserMenu />
         </div>
       </div>
     </header>
@@ -29,6 +30,7 @@
 import { useI18n } from "vue-i18n";
 import BrandLogo from "../components/BrandLogo.vue";
 import LocaleSwitch from "../components/LocaleSwitch.vue";
+import UserMenu from "../components/UserMenu.vue";
 
 const { t } = useI18n();
 </script>

@@ -7,3 +7,6 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: ${SJODUR_OIDC_ISSUER}
+          # When the backend reaches Keycloak through an internal hostname while tokens carry the
+          # public issuer URL, keep issuer-uri public and add the internal JWKS endpoint here, e.g.
+          # jwk-set-uri: http://keycloak:8081/realms/sjodur/protocol/openid-connect/certs

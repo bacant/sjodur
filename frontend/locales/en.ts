@@ -34,6 +34,21 @@ const en: typeof de = {
       expense: "Expense",
     },
   },
+  auth: {
+    login: "Sign in",
+    logout: "Sign out",
+  },
+  dashboard: {
+    kicker: "Overview",
+    greeting: "Hello {name}",
+    lead: "Your budget book will live here. Until then this page shows that login and API work together.",
+    session: "Your session",
+    email: "Email",
+    roles: "Roles",
+    api: "Backend",
+    apiOk: "reachable, token accepted",
+    apiUnreachable: "not reachable",
+  },
   error: {
     notFound: "This page does not exist.",
     generic: "Something went wrong.",

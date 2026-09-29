@@ -1,31 +1,46 @@
 import vike from "@vikejs/hono";
 import { Hono } from "hono";
-import { proxy } from "hono/proxy";
+import {
+  apiProxy,
+  assertProductionReady,
+  authRoutes,
+  createSessionStore,
+  loadAuthConfig,
+  OidcClient,
+  requireSameOrigin,
+  sessionMiddleware,
+  userContext,
+  type AuthEnv,
+} from "./auth";
+
+// Local development reads frontend/.env (see .env.example); containers get real environment variables.
+try {
+  process.loadEnvFile(".env");
+} catch {
+  /* no .env file – fine */
+}
+
+const config = loadAuthConfig();
+assertProductionReady(config);
+const store = await createSessionStore(config);
+const oidc = new OidcClient(config);
 
 /**
- * Base URL of the Spring Boot backend. All requests to /api/* are forwarded there,
- * in development (vike dev) and in production alike, so the browser only ever talks
- * to one origin and no CORS configuration is needed.
+ * Request pipeline:
+ *   1. load the session referenced by the cookie
+ *   2. /auth/*   login, callback, logout, me (OIDC "backend for frontend")
+ *   3. /api/*    CSRF check for cookie-authenticated writes, then proxy to Spring with Bearer token
+ *   4. Vike      pages and assets, with pageContext.user
  */
-const API_URL = (process.env.SJODUR_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
-
 function getApp() {
-  const app = new Hono();
+  const app = new Hono<AuthEnv>();
 
-  app.all("/api/*", (c) => {
-    const url = new URL(c.req.url);
-    return proxy(`${API_URL}${url.pathname}${url.search}`, {
-      ...c.req,
-      headers: {
-        ...c.req.header(),
-        "x-forwarded-host": c.req.header("host") ?? "",
-        "x-forwarded-proto": url.protocol.replace(":", ""),
-      },
-    });
-  });
+  app.use("*", sessionMiddleware(store, config));
+  app.route("/auth", authRoutes(store, oidc, config));
+  app.use("/api/*", requireSameOrigin(config));
+  app.all("/api/*", apiProxy(store, oidc, config));
 
-  // Vike handles everything else (pages, assets).
-  vike(app);
+  vike(app, [userContext]);
 
   return app;
 }

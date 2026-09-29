@@ -1,3 +1,5 @@
+# Local infrastructure. Spring Boot starts this file automatically (spring.docker.compose.file);
+# `docker compose up -d` works as well. Data survives restarts in named volumes.
 services:
   postgres:
     image: postgres:17
@@ -9,5 +11,37 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sjodur -d sjodur"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Identity provider. Admin console: http://localhost:8081 (admin / admin).
+  # Realm "sjodur" with test users is imported on first start from keycloak/realm-sjodur.json.
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8081
+      # Fixed public URL so the issuer in every token is http://localhost:8081/realms/sjodur
+      KC_HOSTNAME: http://localhost:8081
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./keycloak/realm-sjodur.json:/opt/keycloak/data/import/realm-sjodur.json:ro
+      - keycloak-data:/opt/keycloak/data/h2
+
+  # Session store for the frontend in production-like setups; the dev server uses memory unless REDIS_URL is set.
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+
 volumes:
   pgdata:
+  keycloak-data:

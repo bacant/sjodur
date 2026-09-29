@@ -2,11 +2,11 @@ spring:
   application:
     name: sjodur
   profiles:
-    default: local            # gilt, solange kein anderes Profil gesetzt ist
+    default: local            # applies unless SPRING_PROFILES_ACTIVE is set
   docker:
     compose:
       file: ../infra/docker-compose.yml
-      lifecycle-management: start-only   # Datenbank weiterlaufen lassen, wenn die App stoppt
+      lifecycle-management: start-only   # keep the database and Keycloak running when the app stops
   datasource:
     url: ${SJODUR_DB_URL:jdbc:postgresql://localhost:5432/sjodur}
     username: ${SJODUR_DB_USER:sjodur}
@@ -14,9 +14,17 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: validate      # Schema kommt ausschließlich aus Flyway-Migrationen
+      ddl-auto: validate      # the schema comes from Flyway migrations only
   flyway:
     enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Must match the "iss" claim of the tokens exactly (see docs/auth.md on the issuer pitfall).
+          issuer-uri: ${SJODUR_OIDC_ISSUER:http://localhost:8081/realms/sjodur}
+          # Tokens without this audience are rejected; Keycloak adds it through the audience mapper.
+          audiences: sjodur-api
 
 management:
   endpoints:

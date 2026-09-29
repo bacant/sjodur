@@ -32,6 +32,21 @@ export default {
       expense: "Ausgabe",
     },
   },
+  auth: {
+    login: "Anmelden",
+    logout: "Abmelden",
+  },
+  dashboard: {
+    kicker: "Übersicht",
+    greeting: "Hallo {name}",
+    lead: "Hier entsteht dein Haushaltsbuch. Bis dahin zeigt diese Seite, dass Anmeldung und API zusammenspielen.",
+    session: "Deine Sitzung",
+    email: "E-Mail",
+    roles: "Rollen",
+    api: "Backend",
+    apiOk: "erreichbar, Token akzeptiert",
+    apiUnreachable: "nicht erreichbar",
+  },
   error: {
     notFound: "Diese Seite gibt es nicht.",
     generic: "Da ist etwas schiefgelaufen.",
