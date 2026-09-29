@@ -117,14 +117,61 @@ export function needsRefresh(session: Session, now = Date.now()): boolean {
   return session.expiresAt - REFRESH_LEEWAY_MS <= now;
 }
 
+const REFRESH_LOCK_TTL_MS = 10_000;
+const REFRESH_LOCK_RETRY_MS = 150;
+const REFRESH_LOCK_ATTEMPTS = 40;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /**
  * Returns a session with a valid access token, refreshing it first if necessary.
- * Concurrent requests for the same session share one refresh (refresh tokens rotate,
- * so a second refresh with the old token would fail). Returns null if the session
- * could not be refreshed – the caller should then treat the user as signed out.
+ *
+ * Refresh tokens rotate, so exactly one refresh may happen per session – even when several
+ * instances of this server share the store. Two layers guarantee that:
+ *   1. in-process single-flight: concurrent requests on this instance share one refresh,
+ *   2. a store-level lock (Redis SET NX): other instances wait and then re-read the session
+ *      that the lock holder wrote, instead of refreshing a second time.
+ * Returns null if the session could not be refreshed – the caller then treats the user as
+ * signed out.
  */
 export function createTokenRefresher(store: SessionStore, oidc: OidcClient, config: AuthConfig) {
   const inFlight = new Map<string, Promise<Session | null>>();
+
+  async function refreshWithLock(session: Session): Promise<Session | null> {
+    const lockKey = `refresh:${session.id}`;
+    for (let attempt = 0; attempt < REFRESH_LOCK_ATTEMPTS; attempt++) {
+      if (await store.tryLock(lockKey, REFRESH_LOCK_TTL_MS)) {
+        try {
+          // Someone may have refreshed while we waited for the lock.
+          const current = (await store.get(session.id)) ?? session;
+          if (!needsRefresh(current)) return current;
+          if (!current.refreshToken) return null;
+          try {
+            const tokens = await oidc.refresh(current.refreshToken);
+            const updated: Session = {
+              ...current,
+              accessToken: tokens.accessToken,
+              refreshToken: tokens.refreshToken ?? current.refreshToken,
+              idToken: tokens.idToken ?? current.idToken,
+              expiresAt: tokens.expiresAt,
+            };
+            await store.set(updated, config.sessionTtlSeconds);
+            return updated;
+          } catch {
+            await store.delete(current.id);
+            return null;
+          }
+        } finally {
+          await store.unlock(lockKey);
+        }
+      }
+      await sleep(REFRESH_LOCK_RETRY_MS);
+      const current = await store.get(session.id);
+      if (current && !needsRefresh(current)) return current; // another instance finished the refresh
+      if (!current) return null; // another instance found the refresh token revoked
+    }
+    return null; // lock holder never finished; better to sign out than to race
+  }
 
   return async function freshSession(session: Session): Promise<Session | null> {
     if (!needsRefresh(session)) return session;
@@ -132,25 +179,7 @@ export function createTokenRefresher(store: SessionStore, oidc: OidcClient, conf
 
     let pending = inFlight.get(session.id);
     if (!pending) {
-      pending = (async () => {
-        try {
-          const tokens = await oidc.refresh(session.refreshToken!);
-          const updated: Session = {
-            ...session,
-            accessToken: tokens.accessToken,
-            refreshToken: tokens.refreshToken ?? session.refreshToken,
-            idToken: tokens.idToken ?? session.idToken,
-            expiresAt: tokens.expiresAt,
-          };
-          await store.set(updated, config.sessionTtlSeconds);
-          return updated;
-        } catch {
-          await store.delete(session.id);
-          return null;
-        } finally {
-          inFlight.delete(session.id);
-        }
-      })();
+      pending = refreshWithLock(session).finally(() => inFlight.delete(session.id));
       inFlight.set(session.id, pending);
     }
     return pending;

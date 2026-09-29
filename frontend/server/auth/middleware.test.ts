@@ -139,6 +139,27 @@ describe("token refresh", () => {
     expect((await store.get("s1"))?.refreshToken).toBe("rt2");
   });
 
+  it("refreshes once across instances that share the store (cluster)", async () => {
+    const store = new MemorySessionStore();
+    const expired = session({ expiresAt: Date.now() - 1 });
+    await store.set(expired, 60);
+    const refresh = vi.fn(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50)); // slow provider
+      return { accessToken: "new", refreshToken: "rt2", expiresAt: Date.now() + 300_000 };
+    });
+    const oidc = { refresh } as unknown as OidcClient;
+    // Two instances of the frontend server: separate in-process state, one shared store.
+    const instanceA = createTokenRefresher(store, oidc, config);
+    const instanceB = createTokenRefresher(store, oidc, config);
+
+    const [a, b] = await Promise.all([instanceA(expired), instanceB(expired)]);
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(a?.accessToken).toBe("new");
+    expect(b?.accessToken).toBe("new");
+    expect(b?.refreshToken).toBe("rt2");
+  });
+
   it("ends the session when the refresh fails", async () => {
     const store = new MemorySessionStore();
     const expired = session({ expiresAt: Date.now() - 1 });

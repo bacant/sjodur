@@ -28,6 +28,12 @@ export interface SessionStore {
   /** Stores or replaces a session; it expires after ttlSeconds. */
   set(session: Session, ttlSeconds: number): Promise<void>;
   delete(id: string): Promise<void>;
+  /**
+   * Short-lived exclusive lock shared by all instances (refresh tokens rotate, so only one
+   * instance may refresh a session at a time). Returns false when someone else holds it.
+   */
+  tryLock(key: string, ttlMs: number): Promise<boolean>;
+  unlock(key: string): Promise<void>;
 }
 
 export function newSessionId(): string {
@@ -41,8 +47,20 @@ export function newCsrfToken(): string {
 /** Keeps sessions in process memory. Fine for development and single-instance setups; gone on restart. */
 export class MemorySessionStore implements SessionStore {
   private readonly sessions = new Map<string, { session: Session; expiresAt: number }>();
+  private readonly locks = new Map<string, number>();
 
   constructor(private readonly now: () => number = Date.now) {}
+
+  async tryLock(key: string, ttlMs: number): Promise<boolean> {
+    const until = this.locks.get(key);
+    if (until !== undefined && until > this.now()) return false;
+    this.locks.set(key, this.now() + ttlMs);
+    return true;
+  }
+
+  async unlock(key: string): Promise<void> {
+    this.locks.delete(key);
+  }
 
   async get(id: string): Promise<Session | null> {
     const entry = this.sessions.get(id);
@@ -97,6 +115,16 @@ export class RedisSessionStore implements SessionStore {
 
   async delete(id: string): Promise<void> {
     await this.redis.del(this.key(id));
+  }
+
+  async tryLock(key: string, ttlMs: number): Promise<boolean> {
+    // SET NX PX is atomic across all instances; the TTL frees the lock if an instance dies mid-refresh.
+    const result = await this.redis.set(`sjodur:lock:${key}`, "1", "PX", ttlMs, "NX");
+    return result === "OK";
+  }
+
+  async unlock(key: string): Promise<void> {
+    await this.redis.del(`sjodur:lock:${key}`);
   }
 }
 

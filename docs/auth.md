@@ -114,6 +114,22 @@ OpenID provider (`server/auth/flow.test.ts`), including the CSRF rules and the l
 `./gradlew test` runs `SecurityConfigTest`, which exercises the filter chain with self-signed
 tokens.
 
+## Running several instances
+
+Nothing in the login flow needs sticky sessions:
+
+- The backend is stateless per request (JWT validation, no HTTP session) – scale it freely.
+- The login cookie (`sjodur_login`) is signed, not stored; any instance can complete a login
+  started on another, as long as all share `SJODUR_SESSION_SECRET`.
+- Sessions live in the store. With `REDIS_URL` every instance sees the same sessions and
+  CSRF tokens; the in-memory store is for a single dev process only.
+- Token refresh is serialised across instances: refresh tokens rotate, so `createTokenRefresher`
+  takes a store-level lock (`SET NX PX` in Redis) before refreshing, and instances that lose the
+  race re-read the refreshed session instead of refreshing again.
+- Redis itself is the one component that must be highly available (Sentinel, a managed
+  service, or a `PostgresSessionStore` behind the same `SessionStore` interface if one
+  fewer moving part matters more than latency).
+
 ## Production checklist
 
 - HTTPS in front of the frontend; `SJODUR_PUBLIC_URL` with `https://` (turns on Secure cookies).
