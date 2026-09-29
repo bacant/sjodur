@@ -31,3 +31,16 @@ management:
     web:
       exposure:
         include: health, info, metrics
+  tracing:
+    sampling:
+      probability: 1.0        # every request gets a trace id (sampling only matters once spans are exported)
+
+# Logging: Logback via Spring Boot. Human-readable here, ECS JSON in application-prod.yml.
+# Micrometer Tracing adds [app,traceId,spanId] to every line automatically.
+logging:
+  level:
+    root: INFO
+    io.sjodur: DEBUG
+    http.request: INFO        # one line per API request, see RequestLoggingFilter
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG  # local only: shows the SQL statements

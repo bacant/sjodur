@@ -1,0 +1,17 @@
+# Add to backend/build.gradle
+
+dependencies {
+    // Trace ids in every log line + continuation of the frontend's W3C traceparent.
+    // (For exporting spans to a collector later: replace with spring-boot-starter-opentelemetry.)
+    implementation 'org.springframework.boot:spring-boot-micrometer-tracing-opentelemetry'
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+}
+
+// Shared message catalogs: the frontend's JSON files are the single source of truth.
+// They land in the jar as i18n/de.json and i18n/en.json and are read by io.sjodur.i18n.Messages.
+processResources {
+    from("$projectDir/../frontend/locales") {
+        include '*.json'
+        into 'i18n'
+    }
+}

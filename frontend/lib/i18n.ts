@@ -1,6 +1,5 @@
 import { createI18n } from "vue-i18n";
-import de from "../locales/de";
-import en from "../locales/en";
+import messages from "../locales";
 
 export const supportedLocales = ["de", "en"] as const;
 export type Locale = (typeof supportedLocales)[number];
@@ -14,6 +13,6 @@ export function createAppI18n(locale: Locale = defaultLocale) {
     legacy: false,
     locale,
     fallbackLocale: "en",
-    messages: { de, en },
+    messages,
   });
 }

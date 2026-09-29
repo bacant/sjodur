@@ -3,18 +3,21 @@ import { enhance, MiddlewareOrder } from "@universal-middleware/core";
 import type { Context, Handler, MiddlewareHandler } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { proxy } from "hono/proxy";
+import type { AppEnv } from "../env";
+import { logger } from "../logging";
 import type { AuthConfig } from "./config";
 import type { OidcClient } from "./oidc";
 import type { Session, SessionStore, SessionUser } from "./session";
 
 export const SESSION_COOKIE = "sjodur_session";
 
-/** Hono environment shared by all auth-aware handlers. */
-export type AuthEnv = {
-  Variables: {
-    session: Session | null;
-  };
-};
+/** Request logger when the logging middleware ran, the global logger otherwise (tests, tools). */
+export function logOf(c: Context<AppEnv>) {
+  return c.var.log ?? logger;
+}
+
+/** Hono environment of the auth handlers – the shared app environment (see server/env.ts). */
+export type AuthEnv = AppEnv;
 
 /** Access tokens are refreshed when they expire within this window. */
 export const REFRESH_LEEWAY_MS = 30_000;
@@ -172,6 +175,8 @@ export function apiProxy(store: SessionStore, oidc: OidcClient, config: AuthConf
     // The session cookie is ours; the backend never sees it.
     delete headers.cookie;
     delete headers.Cookie;
+    // Continue our trace in the backend (Micrometer Tracing reads W3C traceparent).
+    if (c.var.traceparent) headers.traceparent = c.var.traceparent;
 
     if (c.var.session) {
       const session = await freshSession(c.var.session);

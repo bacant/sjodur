@@ -8,6 +8,7 @@ import { apiProxy, CSRF_HEADER, csrfProtection, sessionMiddleware, type AuthEnv 
 import { OidcClient } from "./oidc";
 import { authRoutes } from "./routes";
 import { MemorySessionStore } from "./session";
+import { requestLogging } from "../logging";
 
 /**
  * Walks through the whole "backend for frontend" flow with a real (mock) OpenID
@@ -61,6 +62,7 @@ beforeAll(async () => {
   const oidc = new OidcClient(config);
 
   app = new Hono<AuthEnv>();
+  app.use("*", requestLogging());
   app.use("*", sessionMiddleware(store, config));
   app.use("/auth/logout", csrfProtection(config, { allowFormField: true }));
   app.route("/auth", authRoutes(store, oidc, config));
@@ -128,6 +130,18 @@ describe("login flow", () => {
     expect(lastBackendRequest?.headers.authorization).toMatch(/^Bearer ey/);
     expect(lastBackendRequest?.headers.cookie).toBeUndefined();
     expect(lastBackendRequest?.headers["x-forwarded-host"]).toBe("localhost");
+  });
+
+  it("propagates the trace: X-Trace-Id to the browser, traceparent to the backend", async () => {
+    const incoming = "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01";
+    const res = await app.request("/api/me", { headers: { cookie: sessionCookie, traceparent: incoming } });
+    expect(res.headers.get("x-trace-id")).toBe("4bf92f3577b34da6a3ce929d0e0e4736");
+    const forwarded = String(lastBackendRequest?.headers.traceparent);
+    expect(forwarded).toMatch(/^00-4bf92f3577b34da6a3ce929d0e0e4736-[0-9a-f]{16}-01$/);
+    expect(forwarded).not.toBe(incoming);
+
+    const fresh = await app.request("/api/public/ping");
+    expect(fresh.headers.get("x-trace-id")).toMatch(/^[0-9a-f]{32}$/);
   });
 
   it("enforces CSRF on writes: origin and token", async () => {

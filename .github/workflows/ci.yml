@@ -77,6 +77,10 @@ jobs:
         # Fails on licences outside the allow-list and if a Vike package leaves MIT (see docs/adr/0002).
         run: pnpm licenses:check
 
+      - name: Check message catalogs
+        # Same keys and placeholders in every language; the backend reads these files too (docs/i18n.md).
+        run: pnpm i18n:check
+
       - name: Lint
         run: pnpm lint
 

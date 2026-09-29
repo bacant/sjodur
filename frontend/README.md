@@ -59,7 +59,11 @@ Logo files come from the brand package (`docs/brand/` in the repository root); t
 
 ## Internationalisation
 
-UI text goes through vue-i18n (`useI18n()` → `t("home.title")`). German is the default, English the fallback; `locales/de.ts` defines the message schema and `locales/en.ts` is typed against it, so a missing key fails at type-check time. Number and currency formatting uses `Intl` with the locale mapped in `lib/i18n.ts`.
+UI text goes through vue-i18n (`useI18n()` → `t("home.title")`). German is the default, English the fallback. The catalogs `locales/de.json` and `locales/en.json` are shared with the backend (it copies them into its jar), which is why they are JSON and why `pnpm i18n:check` guards key and placeholder parity. API errors arrive as problem details with a `code`; `lib/problem.ts` translates them with the same catalog. Number and currency formatting uses `Intl` with the locale mapped in `lib/i18n.ts`. Details: `../docs/i18n.md`.
+
+## Logging
+
+`server/logging.ts`: pino, pretty in development and ECS-style JSON in production, one line per request with a W3C trace id that is returned as `X-Trace-Id` and forwarded to the backend. Browser errors are reported to `POST /log/client`. Environment: `LOG_LEVEL` (`debug`/`info`/`warn`), `LOG_FORMAT=json` to get JSON locally. Details: `../docs/logging.md`.
 
 ## Docker
 

@@ -1,0 +1,75 @@
+{
+  "app": {
+    "name": "Sjodur",
+    "status": "Pre-alpha",
+    "tagline": "Budget book, forecast and investments in one app.",
+    "footer": "Sjodur – from the Icelandic sjóður, “the fund”."
+  },
+  "locale": {
+    "label": "Language"
+  },
+  "home": {
+    "kicker": "Welcome",
+    "title": "See where your money goes – and where it is heading.",
+    "lead": "Sjodur brings budget book, cash-flow forecast and investment overview into one picture.",
+    "pillars": {
+      "ledger": {
+        "title": "Budget book",
+        "text": "Accounts, categories, recurring entries and imports – the view of today."
+      },
+      "forecast": {
+        "title": "Forecast",
+        "text": "Balances months ahead, play through scenarios, get warned before an account runs dry."
+      },
+      "invest": {
+        "title": "Investments",
+        "text": "Savings plans, ETFs and stocks next to everyday finances – your wealth as a whole."
+      }
+    },
+    "sample": {
+      "label": "Amounts and colour codes",
+      "income": "Income",
+      "expense": "Expense"
+    }
+  },
+  "auth": {
+    "login": "Sign in",
+    "logout": "Sign out"
+  },
+  "dashboard": {
+    "kicker": "Overview",
+    "greeting": "Hello {name}",
+    "lead": "Your budget book will live here. Until then this page shows that login and API work together.",
+    "session": "Your session",
+    "email": "Email",
+    "roles": "Roles",
+    "api": "Backend",
+    "apiOk": "reachable, token accepted",
+    "apiUnreachable": "not reachable"
+  },
+  "error": {
+    "notFound": "This page does not exist.",
+    "generic": "Something went wrong.",
+    "back": "Back to start"
+  },
+  "problem": {
+    "title": "That did not work",
+    "generic": "Something went wrong. Please try again.",
+    "not_found": "The entry could not be found.",
+    "forbidden": "You do not have permission to do that.",
+    "unauthenticated": "Please sign in to continue.",
+    "validation_failed": "Please check your input.",
+    "conflict": "The entry has been changed in the meantime. Please reload the page.",
+    "traceHint": "Support reference: {traceId}"
+  },
+  "validation": {
+    "required": "Required",
+    "size": "Must be between {min} and {max} characters",
+    "min": "Must be at least {value}",
+    "max": "Must be at most {value}",
+    "email": "Not a valid email address",
+    "currency": "Not a valid currency code",
+    "amount": "Not a valid amount",
+    "date": "Not a valid date"
+  }
+}

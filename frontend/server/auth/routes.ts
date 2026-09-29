@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";
 import type { AuthConfig } from "./config";
-import { type AuthEnv, clearSessionCookie, cookieOptions, setSessionCookie } from "./middleware";
+import { type AuthEnv, clearSessionCookie, cookieOptions, logOf, setSessionCookie } from "./middleware";
 import { OidcClient, userFromClaims } from "./oidc";
 import { newCsrfToken, newSessionId, type Session, type SessionStore } from "./session";
 
@@ -45,7 +45,7 @@ export function authRoutes(store: SessionStore, oidc: OidcClient, config: AuthCo
       const url = await oidc.loginUrl({ state: login.state, nonce: login.nonce, codeChallenge });
       return c.redirect(url.href);
     } catch (error) {
-      console.error("OIDC discovery failed", error);
+      logOf(c).error({ err: error }, "OIDC discovery failed");
       return c.text("Login is temporarily unavailable.", 503);
     }
   });
@@ -78,7 +78,7 @@ export function authRoutes(store: SessionStore, oidc: OidcClient, config: AuthCo
       setSessionCookie(c, config, session.id);
       return c.redirect(login.returnTo);
     } catch (error) {
-      console.error("OIDC callback failed", error);
+      logOf(c).warn({ err: error }, "OIDC callback failed");
       return c.text("Login failed, please try again.", 400);
     }
   });
