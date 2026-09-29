@@ -1,0 +1,55 @@
+# Sjodur edge: TLS (automatic Let's Encrypt), HTTP/3, security headers, load balancing.
+# Domains and the ACME contact come from the environment (.env).
+
+{
+	email {$ACME_EMAIL}
+}
+
+(security) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+}
+
+# The app: everything goes to the frontend server (SSR, /auth, /api proxy to the backend).
+{$SJODUR_DOMAIN} {
+	import security
+	encode zstd gzip
+	reverse_proxy {
+		dynamic a frontend 3000 {
+			refresh 5s
+		}
+		health_uri /healthz
+		health_interval 15s
+		lb_policy least_conn
+	}
+}
+
+# Keycloak: login pages, tokens, account console. Sends its own headers.
+{$SJODUR_AUTH_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy {
+		dynamic a keycloak 8080 {
+			refresh 5s
+		}
+	}
+}
+
+# Direct API access with Bearer tokens (mobile app, integrations) – bypasses the browser session layer.
+{$SJODUR_API_DOMAIN} {
+	import security
+	encode zstd gzip
+	reverse_proxy {
+		dynamic a backend 8080 {
+			refresh 5s
+		}
+		health_uri /actuator/health/readiness
+		health_interval 15s
+		lb_policy least_conn
+	}
+}

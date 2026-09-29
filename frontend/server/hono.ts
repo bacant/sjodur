@@ -42,6 +42,9 @@ logger.info(
 function getApp() {
   const app = new Hono<AppEnv>();
 
+  // Liveness for load balancers and orchestrators; no session, no logging noise.
+  app.get("/healthz", (c) => c.json({ status: "ok" }));
+
   app.use("*", requestLogging());
   app.use("*", sessionMiddleware(store, config));
   app.post("/log/client", clientErrorLog());
