@@ -12,34 +12,57 @@ Browser ──▶ Hono (pino)                    ──traceparent──▶ Spri
 
 ## Backend (Spring Boot + Logback)
 
-Spring Boot uses Logback out of the box; there is no `logback-spring.xml` because everything
-needed is a property:
+Configured in `backend/src/main/resources/logback-spring.xml`. Every line carries the request
+context from the MDC: `[client.ip|user.id]`, the trace id, the thread, `[entity|entity.id]`
+and the logger.
 
-| Profile | Output | Where configured |
+```
+2026-09-29 10:48:29.630 [10.0.0.7|8f1c9a…] INFO  [4bf92f3577b34da6a3ce929d0e0e4736] [http-nio-8080-exec-3] [Transaction|42] TransactionService : booked
+```
+
+| Profile | Appenders | Levels |
 |---|---|---|
-| `local` (default) | classic pattern with `[sjodur,traceId,spanId]`, SQL statements at DEBUG | `application.yml` → `logging.level.*` |
-| `prod` | ECS JSON (`@timestamp`, `log.level`, `message`, `service.name`, `trace.id`, …) via Boot's built-in structured logging | `application-prod.yml` → `logging.structured.format.console: ecs` |
+| `local` (default) | coloured console, rolling file `logs/sjodur.log`, per-job files (SIFT) | `io.sjodur` DEBUG, SQL statements, OIDC token validation DEBUG |
+| `prod` | ECS JSON on stdout (Boot's `StructuredLogEncoder`) | `io.sjodur` INFO, Spring WARN |
+| `prod,file` | plus the rolling files | |
+| `prod,mail` | plus error digests by e-mail | |
 
-Dependencies (see `backend/build.gradle.additions.txt`): `spring-boot-micrometer-tracing-opentelemetry`
-and `micrometer-tracing-bridge-otel`. With them, Micrometer Tracing creates a span per request,
-continues an incoming `traceparent`, and puts `traceId`/`spanId` into the MDC – every log line
-carries them without further code. Exporting spans to a collector (Tempo, Jaeger, an OTel
-collector) is a later step: swap in `spring-boot-starter-opentelemetry` and set
-`management.opentelemetry.tracing.export.otlp.endpoint`.
+Profiles combine: `SPRING_PROFILES_ACTIVE=prod,file,mail`.
 
-`RequestLoggingFilter` (`io.sjodur.logging`) writes one line per `/api` request – method, path,
-status, duration – under the logger `http.request`, puts the user's `sub` into the MDC as
-`user.id`, and returns `X-Trace-Id`. It runs after the security filter chain, so the user is
-known; requests that Spring Security rejects before that (401) show up in the
-`http.server.requests` metric rather than in this log.
+**Files.** The directory comes from `logging.file.path` (env `LOGGING_FILE_PATH`), exposed to
+Logback as `LOG_PATH`, default `logs`. It does not have to be absolute – a relative path is
+resolved against the JVM's working directory, which is `backend/` under `./gradlew bootRun`
+but may be the repository root in an IDE and `/app` in a container. That is why `local`
+defaults to a relative `logs/` (git-ignored, next to the code) and `prod` to
+`/var/log/sjodur`, and why containers do not write files at all unless the `file` profile is
+on and a volume is mounted there: on a container's ephemeral filesystem, stdout is the log
+file. Rotation: 200 MB per file, daily, 60 days, 5 GB cap, gzipped (`SizeAndTimeBasedRollingPolicy`).
 
-Use `private static final Logger log = LoggerFactory.getLogger(MyService.class)` (SLF4J) in
-application code. Log the *what*, not personal data: ids, counts, states – never amounts,
-names or e-mail addresses.
+**Per-job files (SIFT).** `try (var ignored = LogContext.file("import-42")) { … }` routes every
+line inside the block into `logs/sjodur.import-42.log` in addition to the main log. Lines
+without the MDC key never reach the sifting appender (`MdcPresentFilter`), so there is no
+duplicate "default" file.
 
-A `logback-spring.xml` becomes necessary only for things properties cannot express: log files
-with rotation (containers should log to stdout instead), custom masking, or additional
-appenders.
+**Entity context.** `try (var ignored = LogContext.entity("Transaction", id)) { … }` fills the
+`[entity|entity.id]` slot for the block; nested scopes restore the previous values.
+
+**E-mail digests.** `DigestSmtpAppender` extends Logback's `SMTPAppender` and sends one mail
+per interval instead of one per error: the first ERROR starts a five-minute timer, everything
+arriving until then goes into the same mail (max 50 events, the rest is counted), so an
+outage produces a handful of mails, not hundreds. Host, port, recipients come from
+`sjodur.logging.mail.*` (env `SJODUR_MAIL_HOST`, `SJODUR_ALERT_MAIL`, …); authentication and
+TLS are configured exactly like Logback's `SMTPAppender` (`username`, `password`, `starttls`).
+Requires `spring-boot-starter-mail` on the classpath.
+
+**Trace ids.** Micrometer Tracing (`spring-boot-micrometer-tracing-opentelemetry` +
+`micrometer-tracing-bridge-otel`, see `build.gradle.additions.txt`) continues the frontend's
+`traceparent` and puts `traceId`/`spanId` into the MDC before any other filter runs.
+`RequestLoggingFilter` echoes it as `X-Trace-Id`, logs one line per `/api` request under the
+logger `http.request` and sets `client.ip` and `user.id` for the request. Exporting spans to a
+collector is a later step (`spring-boot-starter-opentelemetry`).
+
+Use `LoggerFactory.getLogger(MyService.class)` (SLF4J) in application code. Log the *what*,
+not personal data: ids, counts, states – never amounts, names or e-mail addresses.
 
 ## Frontend server (Hono + pino)
 

@@ -4,6 +4,16 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.7'
 }
 
+dependencies {
+	// Trace ids in every log line + continuation of the frontend's W3C traceparent.
+	// (For exporting spans to a collector later: replace with spring-boot-starter-opentelemetry.)
+	implementation 'org.springframework.boot:spring-boot-micrometer-tracing-opentelemetry'
+	implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+	// Jakarta Mail for Logback's SMTPAppender (DigestSmtpAppender, profile "mail")
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+}
+
+
 group = 'io.sjodur'
 version = '0.0.1-SNAPSHOT'
 
@@ -44,4 +54,21 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.named('bootRun') {
+	systemProperty 'spring.output.ansi.enabled', 'always'
+}
+
+processResources {
+	def locales = file("$projectDir/../frontend/locales")
+	doFirst {
+		if (fileTree(locales) { include '*.json' }.isEmpty()) {
+			throw new GradleException("No message catalogs (*.json) in $locales – see docs/i18n.md")
+		}
+	}
+	from(locales) {
+		include '*.json'
+		into 'i18n'
+	}
 }

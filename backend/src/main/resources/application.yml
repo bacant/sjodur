@@ -35,12 +35,9 @@ management:
     sampling:
       probability: 1.0        # every request gets a trace id (sampling only matters once spans are exported)
 
-# Logging: Logback via Spring Boot. Human-readable here, ECS JSON in application-prod.yml.
-# Micrometer Tracing adds [app,traceId,spanId] to every line automatically.
+# Logging is configured in logback-spring.xml (appenders, levels per profile).
+# logging.file.path is the log directory for the file appenders; relative paths resolve against
+# the working directory (backend/ with ./gradlew bootRun). Override with LOGGING_FILE_PATH.
 logging:
-  level:
-    root: INFO
-    io.sjodur: DEBUG
-    http.request: INFO        # one line per API request, see RequestLoggingFilter
-    org.springframework.security: INFO
-    org.hibernate.SQL: DEBUG  # local only: shows the SQL statements
+  file:
+    path: logs

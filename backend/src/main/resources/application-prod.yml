@@ -11,19 +11,22 @@ spring:
           # public issuer URL, keep issuer-uri public and add the internal JWKS endpoint here, e.g.
           # jwk-set-uri: http://keycloak:8081/realms/sjodur/protocol/openid-connect/certs
 
-# Structured logging: one ECS JSON object per line (same field names as the frontend server),
-# ready for Elastic, Loki, Datadog or any JSON-aware log pipeline. Nothing to install –
-# Spring Boot ships the encoder.
+# Logging (see logback-spring.xml): ECS JSON on stdout; files only with profile "file",
+# error digests by mail only with profile "mail", e.g. SPRING_PROFILES_ACTIVE=prod,file,mail
 logging:
+  file:
+    path: ${LOGGING_FILE_PATH:/var/log/sjodur}
   structured:
-    format:
-      console: ecs
     ecs:
       service:
         name: sjodur-backend
         version: ${SJODUR_VERSION:unknown}
         environment: ${SJODUR_ENVIRONMENT:production}
-  level:
-    root: INFO
-    io.sjodur: INFO
-    org.hibernate.SQL: WARN
+
+sjodur:
+  logging:
+    mail:
+      host: ${SJODUR_MAIL_HOST:localhost}
+      port: ${SJODUR_MAIL_PORT:25}
+      to: ${SJODUR_ALERT_MAIL:ops@localhost}
+      from: ${SJODUR_MAIL_FROM:sjodur@localhost}
