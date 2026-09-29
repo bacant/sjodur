@@ -129,7 +129,8 @@ Please do not report security vulnerabilities through public issues, discussions
 
 ## Code of conduct
 
-Be kind, be direct, assume good intent. Harassment, discrimination and personal attacks are not tolerated anywhere in this project. Maintainers may edit, remove or lock content and block contributors who violate this. If you experience or witness unacceptable behaviour, contact the maintainers privately.
+This project follows the [Code of Conduct](CODE_OF_CONDUCT.md). By participating you agree
+to uphold it; report concerns to the address given there.
 
 ## Questions?
 
