@@ -55,8 +55,12 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	testLogging {
+		events 'failed'
+		exceptionFormat 'full'
+		showStandardStreams = false
+	}
 }
-
 tasks.named('bootRun') {
 	systemProperty 'spring.output.ansi.enabled', 'always'
 }
