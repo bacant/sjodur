@@ -3,7 +3,7 @@ import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";
 import type { AuthConfig } from "./config";
 import { type AuthEnv, clearSessionCookie, cookieOptions, setSessionCookie } from "./middleware";
 import { OidcClient, userFromClaims } from "./oidc";
-import { newSessionId, type Session, type SessionStore } from "./session";
+import { newCsrfToken, newSessionId, type Session, type SessionStore } from "./session";
 
 const LOGIN_COOKIE = "sjodur_login";
 const LOGIN_COOKIE_MAX_AGE = 10 * 60;
@@ -67,6 +67,7 @@ export function authRoutes(store: SessionStore, oidc: OidcClient, config: AuthCo
       const session: Session = {
         id: newSessionId(),
         user: userFromClaims(tokens.claims),
+        csrfToken: newCsrfToken(),
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
         idToken: tokens.idToken,
@@ -82,7 +83,8 @@ export function authRoutes(store: SessionStore, oidc: OidcClient, config: AuthCo
     }
   });
 
-  const logout = async (c: import("hono").Context<AuthEnv>) => {
+  /** POST only (a GET link could be triggered cross-site); protected by csrfProtection in server/hono.ts. */
+  app.post("/logout", async (c) => {
     const session = c.var.session;
     if (session) await store.delete(session.id);
     clearSessionCookie(c, config);
@@ -92,12 +94,10 @@ export function authRoutes(store: SessionStore, oidc: OidcClient, config: AuthCo
     } catch {
       return c.redirect("/");
     }
-  };
-  app.get("/logout", logout);
-  app.post("/logout", logout);
+  });
 
-  /** The signed-in user for client-side code. Never returns tokens. */
-  app.get("/me", (c) => c.json(c.var.session?.user ?? null));
+  /** The signed-in user and the CSRF token for client-side code. Never returns OAuth tokens. */
+  app.get("/me", (c) => c.json({ user: c.var.session?.user ?? null, csrfToken: c.var.session?.csrfToken ?? null }));
 
   return app;
 }

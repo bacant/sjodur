@@ -6,6 +6,7 @@ function session(id = newSessionId()): Session {
   return {
     id,
     user: { sub: "42", name: "Anna", roles: ["user"] },
+    csrfToken: "csrf",
     accessToken: "at",
     refreshToken: "rt",
     expiresAt: Date.now() + 300_000,

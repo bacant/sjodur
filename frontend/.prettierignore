@@ -152,3 +152,4 @@ dist
 cdk.out
 pnpm-lock.yaml
 public/
+THIRD-PARTY-NOTICES.md

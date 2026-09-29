@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,10 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api")
 class MeController {
 
-    record Me(String sub, String name, String email, List<String> roles) {}
+    public record Me(String sub, String name, String email, List<String> roles) {}
 
     @GetMapping("/me")
-    Me me(@AuthenticationPrincipal Jwt jwt, Authentication authentication) {
+    Me me(JwtAuthenticationToken authentication) {
+        Jwt jwt = authentication.getToken();
         return new Me(
                 jwt.getSubject(),
                 jwt.getClaimAsString("name"),

@@ -73,6 +73,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check licences
+        # Fails on licences outside the allow-list and if a Vike package leaves MIT (see docs/adr/0002).
+        run: pnpm licenses:check
+
       - name: Lint
         run: pnpm lint
 

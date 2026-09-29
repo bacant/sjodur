@@ -13,6 +13,8 @@ export interface SessionUser {
 export interface Session {
   id: string;
   user: SessionUser;
+  /** Synchronizer token for CSRF protection; sent back by the client in the X-CSRF-Token header. */
+  csrfToken: string;
   accessToken: string;
   refreshToken?: string;
   idToken?: string;
@@ -29,6 +31,10 @@ export interface SessionStore {
 }
 
 export function newSessionId(): string {
+  return randomBytes(32).toString("base64url");
+}
+
+export function newCsrfToken(): string {
   return randomBytes(32).toString("base64url");
 }
 

@@ -17,7 +17,7 @@ RUN pnpm install --frozen-lockfile --prod
 FROM base AS build
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN pnpm build
+RUN pnpm build && pnpm licenses:notices
 
 # runtime
 FROM node:24-alpine AS runner
@@ -27,6 +27,7 @@ ENV NODE_ENV=production \
 COPY package.json ./
 COPY --from=deps-prod /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/THIRD-PARTY-NOTICES.md ./
 USER node
 EXPOSE 3000
 CMD ["node", "./dist/server/index.mjs"]

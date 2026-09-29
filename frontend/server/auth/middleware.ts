@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { enhance, MiddlewareOrder } from "@universal-middleware/core";
 import type { Context, Handler, MiddlewareHandler } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
@@ -47,26 +48,63 @@ export function sessionMiddleware(store: SessionStore, config: AuthConfig): Midd
 }
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+export const CSRF_HEADER = "x-csrf-token";
+export const CSRF_FORM_FIELD = "_csrf";
 
 /**
- * CSRF protection for the cookie-authenticated API proxy: state-changing requests
- * must come from our own origin. Modern browsers send Sec-Fetch-Site; older ones
- * are checked against the Origin header. Requests without a session carry no
- * credentials and are left alone.
+ * First CSRF layer: state-changing requests must come from our own origin. Modern
+ * browsers send Sec-Fetch-Site; older ones are checked against the Origin header.
+ * Requests without any browser metadata come from non-browser clients, which
+ * cannot carry our cookie (the token check below still applies to them).
  */
 export function isSameOriginRequest(headers: Headers, publicUrl: string): boolean {
   const fetchSite = headers.get("sec-fetch-site");
   if (fetchSite) return fetchSite === "same-origin" || fetchSite === "none";
   const origin = headers.get("origin");
   if (origin) return origin === publicUrl;
-  // No browser fetch metadata at all: treat as non-browser client, which cannot have our cookie.
   return true;
 }
 
-export function requireSameOrigin(config: AuthConfig): MiddlewareHandler<AuthEnv> {
+export function tokensMatch(expected: string, actual: string | undefined | null): boolean {
+  if (!actual) return false;
+  const a = Buffer.from(expected);
+  const b = Buffer.from(actual);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+async function csrfTokenFrom(c: Context<AuthEnv>, allowFormField: boolean): Promise<string | undefined> {
+  const header = c.req.header(CSRF_HEADER);
+  if (header) return header;
+  if (!allowFormField) return undefined;
+  const contentType = c.req.header("content-type") ?? "";
+  if (!contentType.startsWith("application/x-www-form-urlencoded") && !contentType.startsWith("multipart/form-data")) {
+    return undefined;
+  }
+  const body = await c.req.parseBody();
+  const value = body[CSRF_FORM_FIELD];
+  return typeof value === "string" ? value : undefined;
+}
+
+/**
+ * CSRF protection for cookie-authenticated, state-changing requests – identical in
+ * development and production. Two independent checks, both must pass:
+ *   1. same-origin (Sec-Fetch-Site / Origin),
+ *   2. the session's synchronizer token in the X-CSRF-Token header
+ *      (or the _csrf form field where allowFormField is set, e.g. the logout form).
+ * Safe methods and requests without a session pass through untouched.
+ */
+export function csrfProtection(
+  config: AuthConfig,
+  options: { allowFormField?: boolean } = {},
+): MiddlewareHandler<AuthEnv> {
   return async (c, next) => {
-    if (c.var.session && !SAFE_METHODS.has(c.req.method) && !isSameOriginRequest(c.req.raw.headers, config.publicUrl)) {
+    const session = c.var.session;
+    if (!session || SAFE_METHODS.has(c.req.method)) return next();
+    if (!isSameOriginRequest(c.req.raw.headers, config.publicUrl)) {
       return c.json({ error: "cross_site_request_rejected" }, 403);
+    }
+    if (!tokensMatch(session.csrfToken, await csrfTokenFrom(c, options.allowFormField ?? false))) {
+      return c.json({ error: "csrf_token_missing_or_invalid" }, 403);
     }
     await next();
   };
@@ -148,12 +186,13 @@ export function apiProxy(store: SessionStore, oidc: OidcClient, config: AuthConf
   };
 }
 
-/** Vike universal middleware: exposes the signed-in user as pageContext.user (see types/vike.d.ts). */
+/** Vike universal middleware: exposes pageContext.user and pageContext.csrfToken (see types/vike.d.ts). */
 export const userContext = enhance(
   async (_request: Request, context: Universal.Context, runtime: unknown) => {
     const c = (runtime as { hono?: Context<AuthEnv> }).hono;
-    const user: SessionUser | null = c?.get("session")?.user ?? null;
-    return { ...context, user };
+    const session = c?.get("session") ?? null;
+    const user: SessionUser | null = session?.user ?? null;
+    return { ...context, user, csrfToken: session?.csrfToken ?? null };
   },
   // A universal *middleware* (no path): it extends the context instead of answering the request.
   { name: "sjodur:user-context", order: MiddlewareOrder.AUTHENTICATION, immutable: false },

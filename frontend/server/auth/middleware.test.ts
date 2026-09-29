@@ -2,7 +2,15 @@
 import { Hono } from "hono";
 import { describe, expect, it, vi } from "vitest";
 import { loadAuthConfig } from "./config";
-import { createTokenRefresher, isSameOriginRequest, needsRefresh, requireSameOrigin, type AuthEnv } from "./middleware";
+import {
+  CSRF_HEADER,
+  createTokenRefresher,
+  csrfProtection,
+  isSameOriginRequest,
+  needsRefresh,
+  tokensMatch,
+  type AuthEnv,
+} from "./middleware";
 import type { OidcClient } from "./oidc";
 import { MemorySessionStore, type Session } from "./session";
 
@@ -12,6 +20,7 @@ function session(overrides: Partial<Session> = {}): Session {
   return {
     id: "s1",
     user: { sub: "42", name: "Anna", roles: [] },
+    csrfToken: "token-abc",
     accessToken: "old",
     refreshToken: "rt",
     expiresAt: Date.now() + 300_000,
@@ -38,36 +47,73 @@ describe("isSameOriginRequest", () => {
   });
 });
 
-describe("requireSameOrigin", () => {
-  function appWithSession(s: Session | null) {
+describe("csrfProtection", () => {
+  function appWithSession(s: Session | null, allowFormField = false) {
     const app = new Hono<AuthEnv>();
     app.use("*", async (c, next) => {
       c.set("session", s);
       await next();
     });
-    app.use("/api/*", requireSameOrigin(config));
+    app.use("/api/*", csrfProtection(config, { allowFormField }));
     app.all("/api/*", (c) => c.text("ok"));
     return app;
   }
 
-  it("rejects cross-site writes with a session", async () => {
+  it("rejects cross-site writes even with a valid token", async () => {
     const res = await appWithSession(session()).request("/api/x", {
       method: "POST",
-      headers: { "sec-fetch-site": "cross-site" },
+      headers: { "sec-fetch-site": "cross-site", [CSRF_HEADER]: "token-abc" },
     });
     expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: "cross_site_request_rejected" });
   });
 
-  it("allows same-origin writes, reads, and anonymous requests", async () => {
+  it("rejects same-origin writes without or with a wrong token", async () => {
     const app = appWithSession(session());
-    expect((await app.request("/api/x", { method: "POST", headers: { "sec-fetch-site": "same-origin" } })).status).toBe(
+    const missing = await app.request("/api/x", { method: "POST", headers: { "sec-fetch-site": "same-origin" } });
+    expect(missing.status).toBe(403);
+    expect(await missing.json()).toEqual({ error: "csrf_token_missing_or_invalid" });
+    const wrong = await app.request("/api/x", {
+      method: "POST",
+      headers: { "sec-fetch-site": "same-origin", [CSRF_HEADER]: "token-xyz" },
+    });
+    expect(wrong.status).toBe(403);
+  });
+
+  it("allows same-origin writes with the session token", async () => {
+    const res = await appWithSession(session()).request("/api/x", {
+      method: "DELETE",
+      headers: { "sec-fetch-site": "same-origin", [CSRF_HEADER]: "token-abc" },
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it("accepts the token as a form field only where allowed", async () => {
+    const body = new URLSearchParams({ _csrf: "token-abc" }).toString();
+    const headers = { "sec-fetch-site": "same-origin", "content-type": "application/x-www-form-urlencoded" };
+    expect((await appWithSession(session(), true).request("/api/x", { method: "POST", headers, body })).status).toBe(
       200,
     );
+    expect((await appWithSession(session(), false).request("/api/x", { method: "POST", headers, body })).status).toBe(
+      403,
+    );
+  });
+
+  it("leaves reads and anonymous requests alone", async () => {
+    const app = appWithSession(session());
     expect((await app.request("/api/x", { headers: { "sec-fetch-site": "cross-site" } })).status).toBe(200);
     expect(
       (await appWithSession(null).request("/api/x", { method: "POST", headers: { "sec-fetch-site": "cross-site" } }))
         .status,
     ).toBe(200);
+  });
+
+  it("compares tokens in constant time and rejects empty ones", () => {
+    expect(tokensMatch("abc", "abc")).toBe(true);
+    expect(tokensMatch("abc", "abd")).toBe(false);
+    expect(tokensMatch("abc", "ab")).toBe(false);
+    expect(tokensMatch("abc", undefined)).toBe(false);
+    expect(tokensMatch("abc", "")).toBe(false);
   });
 });
 

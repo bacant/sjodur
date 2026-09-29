@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { OAuth2Server } from "oauth2-mock-server";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { loadAuthConfig, type AuthConfig } from "./config";
-import { apiProxy, requireSameOrigin, sessionMiddleware, type AuthEnv } from "./middleware";
+import { apiProxy, CSRF_HEADER, csrfProtection, sessionMiddleware, type AuthEnv } from "./middleware";
 import { OidcClient } from "./oidc";
 import { authRoutes } from "./routes";
 import { MemorySessionStore } from "./session";
@@ -62,8 +62,9 @@ beforeAll(async () => {
 
   app = new Hono<AuthEnv>();
   app.use("*", sessionMiddleware(store, config));
+  app.use("/auth/logout", csrfProtection(config, { allowFormField: true }));
   app.route("/auth", authRoutes(store, oidc, config));
-  app.use("/api/*", requireSameOrigin(config));
+  app.use("/api/*", csrfProtection(config));
   app.all("/api/*", apiProxy(store, oidc, config));
 });
 
@@ -75,6 +76,7 @@ afterAll(async () => {
 describe("login flow", () => {
   let loginCookie: string;
   let sessionCookie: string;
+  let csrfToken: string;
 
   it("redirects to the identity provider with PKCE, state and nonce", async () => {
     const res = await app.request("/auth/login?returnTo=/app");
@@ -110,11 +112,13 @@ describe("login flow", () => {
     expect(res.status).toBe(400);
   });
 
-  it("exposes the user without any tokens", async () => {
+  it("exposes the user and the CSRF token, but no OAuth tokens", async () => {
     const res = await app.request("/auth/me", { headers: { cookie: sessionCookie } });
-    const user = await res.json();
-    expect(user).toEqual({ sub: "johndoe", name: "Anna Beispiel", email: "anna@example.com", roles: ["user"] });
-    expect(JSON.stringify(user)).not.toMatch(/token/i);
+    const body = await res.json();
+    expect(body.user).toEqual({ sub: "johndoe", name: "Anna Beispiel", email: "anna@example.com", roles: ["user"] });
+    expect(body.csrfToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(JSON.stringify(body)).not.toMatch(/access|refresh|id_token|eyJ/i);
+    csrfToken = body.csrfToken;
   });
 
   it("proxies API calls with a Bearer token and without the session cookie", async () => {
@@ -126,18 +130,25 @@ describe("login flow", () => {
     expect(lastBackendRequest?.headers["x-forwarded-host"]).toBe("localhost");
   });
 
-  it("blocks cross-site writes but allows same-origin ones", async () => {
-    const blocked = await app.request("/api/entries", {
+  it("enforces CSRF on writes: origin and token", async () => {
+    const crossSite = await app.request("/api/entries", {
       method: "POST",
-      headers: { cookie: sessionCookie, "sec-fetch-site": "cross-site" },
+      headers: { cookie: sessionCookie, "sec-fetch-site": "cross-site", [CSRF_HEADER]: csrfToken },
     });
-    expect(blocked.status).toBe(403);
+    expect(crossSite.status).toBe(403);
 
-    const allowed = await app.request("/api/entries", {
+    const noToken = await app.request("/api/entries", {
       method: "POST",
       headers: { cookie: sessionCookie, "sec-fetch-site": "same-origin" },
     });
+    expect(noToken.status).toBe(403);
+
+    const allowed = await app.request("/api/entries", {
+      method: "POST",
+      headers: { cookie: sessionCookie, "sec-fetch-site": "same-origin", [CSRF_HEADER]: csrfToken },
+    });
     expect(allowed.status).toBe(200);
+    expect(lastBackendRequest?.headers.authorization).toMatch(/^Bearer /);
   });
 
   it("refreshes an expiring access token transparently", async () => {
@@ -154,8 +165,26 @@ describe("login flow", () => {
     expect(lastBackendRequest?.headers.authorization).toBe(`Bearer ${refreshed.accessToken}`);
   });
 
-  it("logs out: session gone, cookie cleared, provider notified", async () => {
-    const res = await app.request("/auth/logout", { headers: { cookie: sessionCookie } });
+  it("refuses to log out via GET or without the CSRF token", async () => {
+    expect((await app.request("/auth/logout", { headers: { cookie: sessionCookie } })).status).toBe(404);
+    const forged = await app.request("/auth/logout", {
+      method: "POST",
+      headers: { cookie: sessionCookie, "sec-fetch-site": "same-origin" },
+    });
+    expect(forged.status).toBe(403);
+    expect(await store.get(sessionCookie.split("=")[1])).not.toBeNull();
+  });
+
+  it("logs out via the POST form: session gone, cookie cleared, provider notified", async () => {
+    const res = await app.request("/auth/logout", {
+      method: "POST",
+      headers: {
+        cookie: sessionCookie,
+        "sec-fetch-site": "same-origin",
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ _csrf: csrfToken }).toString(),
+    });
     expect(res.status).toBe(302);
     const location = new URL(res.headers.get("location")!);
     expect(location.pathname).toBe("/endsession");
@@ -163,7 +192,7 @@ describe("login flow", () => {
     expect(res.headers.getSetCookie().find((c) => c.startsWith("sjodur_session="))).toMatch(/Max-Age=0/);
 
     const me = await app.request("/auth/me", { headers: { cookie: sessionCookie } });
-    expect(await me.json()).toBeNull();
+    expect(await me.json()).toEqual({ user: null, csrfToken: null });
   });
 
   it("proxies anonymous API calls without a token", async () => {

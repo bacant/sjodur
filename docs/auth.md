@@ -36,12 +36,22 @@ Mobile app ──────────────── Bearer ────�
    token when it expires within 30 s (one refresh per session at a time, refresh tokens rotate),
    removes the cookie and attaches `Authorization: Bearer …`. Anonymous requests are forwarded
    without a token; the backend decides whether that is enough.
-5. Cookie-authenticated writes must be same-origin (`Sec-Fetch-Site`, fallback `Origin`) –
-   together with SameSite=Lax this is the CSRF protection.
-6. `GET /auth/logout` deletes the session, clears the cookie and redirects to Keycloak's
-   end-session endpoint so the SSO session ends too.
+5. CSRF protection (`csrfProtection`, identical in development and production): every
+   cookie-authenticated request with a state-changing method must (a) be same-origin
+   (`Sec-Fetch-Site`, fallback `Origin`) **and** (b) carry the session's synchronizer token in
+   the `X-CSRF-Token` header. The token is created with the session, exposed as
+   `pageContext.csrfToken` and by `GET /auth/me`, and sent automatically by `useApi().apiFetch`
+   (`lib/api.ts`). Requests without a session carry no credentials and are not checked.
+6. `POST /auth/logout` (a form with the token in the `_csrf` field – no GET, so a link from
+   another site cannot log the user out) deletes the session, clears the cookie and redirects to
+   Keycloak's end-session endpoint so the SSO session ends too.
 
-Pages read the user from `pageContext.user` (`lib/user.ts`); `/app/**` is protected by
+Why the API itself has CSRF disabled: Spring only ever sees Bearer tokens, never cookies, and a
+browser never attaches an `Authorization` header on its own. The cookie – the only credential a
+cross-site request could ride on – exists at Hono, which is where the protection lives.
+
+Pages read the user from `pageContext.user` (`lib/user.ts`) and call the API through
+`useApi().apiFetch` (`lib/api.ts`), which adds the CSRF token; `/app/**` is protected by
 `pages/app/+guard.ts`, which redirects anonymous visitors to the login. Links to `/auth/*` carry
 `rel="external"` so Vike performs a full page load instead of client-side routing.
 
@@ -100,8 +110,9 @@ export it (Realm settings → Action → Partial export, with clients and roles)
    chain works.
 
 Tests: `pnpm test` in `frontend/` runs the auth unit tests and a full login flow against a mock
-OpenID provider (`server/auth/flow.test.ts`); `./gradlew test` runs `SecurityConfigTest`, which
-exercises the filter chain with self-signed tokens.
+OpenID provider (`server/auth/flow.test.ts`), including the CSRF rules and the logout form;
+`./gradlew test` runs `SecurityConfigTest`, which exercises the filter chain with self-signed
+tokens.
 
 ## Production checklist
 

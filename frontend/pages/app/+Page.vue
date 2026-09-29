@@ -21,16 +21,18 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
+import { useApi } from "../../lib/api";
 import { useUser } from "../../lib/user";
 
 const { t } = useI18n();
 const { user } = useUser();
+const { apiFetch } = useApi();
 const apiStatus = ref("…");
 
 // Proves the whole chain: browser → Hono proxy (adds the Bearer token) → Spring resource server.
 onMounted(async () => {
   try {
-    const response = await fetch("/api/me", { headers: { accept: "application/json" } });
+    const response = await apiFetch("/api/me");
     apiStatus.value = response.ok
       ? `${t("dashboard.apiOk")} (${(await response.json()).sub})`
       : `HTTP ${response.status}`;

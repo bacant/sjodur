@@ -55,7 +55,7 @@ Logo files come from the brand package (`docs/brand/` in the repository root); t
 
 ## Authentication
 
-`server/auth/` is the OpenID Connect "backend for frontend": `/auth/login`, `/auth/callback`, `/auth/logout`, `/auth/me`, a session store (memory or Redis), and the `/api` proxy that attaches the Bearer token and refreshes it. Pages get `pageContext.user`; `/app/**` is protected by `pages/app/+guard.ts`. Configuration lives in `.env` (see `.env.example`); the full picture is in `../docs/auth.md`.
+`server/auth/` is the OpenID Connect "backend for frontend": `/auth/login`, `/auth/callback`, `/auth/logout` (POST + CSRF token), `/auth/me`, a session store (memory or Redis), CSRF protection for cookie-authenticated writes, and the `/api` proxy that attaches the Bearer token and refreshes it. Pages get `pageContext.user` and `pageContext.csrfToken`; call the API with `useApi().apiFetch` so the token travels along. `/app/**` is protected by `pages/app/+guard.ts`. Configuration lives in `.env` (see `.env.example`); the full picture is in `../docs/auth.md`.
 
 ## Internationalisation
 
