@@ -17,8 +17,28 @@ plugins {
 
 def backend = gradle.includedBuild('backend')
 def frontendDir = layout.projectDirectory.dir('frontend')
-def pnpm = Os.isFamily(Os.FAMILY_WINDOWS) ? 'pnpm.cmd' : 'pnpm'
-
+// pnpm as an absolute path: the daemon resolves commands with the PATH it was started with,
+// which is not necessarily your shell's. Override with -Ppnpm.path=... or in ~/.gradle/gradle.properties.
+def findOnPath = { String name ->
+    def candidates = Os.isFamily(Os.FAMILY_WINDOWS) ? ["${name}.cmd", "${name}.exe", name] : [name]
+    for (dir in (System.getenv('PATH') ?: '').split(File.pathSeparator)) {
+        for (candidate in candidates) {
+            def file = new File(dir, candidate)
+            if (file.canExecute()) return file.absolutePath
+        }
+    }
+    return null
+}
+def findPnpm = {
+    def found = findOnPath('pnpm')
+    if (found) return found
+    def home = System.getProperty('user.home')
+    def defaults = Os.isFamily(Os.FAMILY_WINDOWS)
+            ? ["${System.getenv('LOCALAPPDATA')}/pnpm/pnpm.cmd"]
+            : ["${System.getenv('PNPM_HOME') ?: ''}/pnpm", "$home/.local/share/pnpm/pnpm", "$home/Library/pnpm/pnpm"]
+    return defaults.collect { new File(it) }.find { it.canExecute() }?.absolutePath
+}
+def pnpm = providers.gradleProperty('pnpm.path').getOrElse(findPnpm())
 // ---------------------------------------------------------------------------
 // Frontend
 // ---------------------------------------------------------------------------
@@ -30,8 +50,16 @@ tasks.register('frontendInstall', Exec) {
     commandLine pnpm, 'install', '--frozen-lockfile'
     inputs.files(frontendDir.file('package.json'), frontendDir.file('pnpm-lock.yaml'))
     outputs.file(frontendDir.file('node_modules/.modules.yaml'))
+    ignoreExitValue = true
+    doLast {
+        if (executionResult.get().exitValue != 0) {
+            logger.error("\n==================================================================")
+            logger.error(" frontendInstall FAILED – run './gradlew frontendInstall' to see why")
+            logger.error("==================================================================\n")
+            throw new GradleException('pnpm install failed (see output above)')
+        }
+    }
 }
-
 tasks.register('frontendDev', Exec) {
     group = 'frontend'
     description = 'Runs the Vike dev server on http://localhost:3000 (blocks until stopped).'
