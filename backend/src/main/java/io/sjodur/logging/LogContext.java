@@ -29,8 +29,7 @@ public final class LogContext implements AutoCloseable {
 
     private final List<Runnable> restores = new ArrayList<>(2);
 
-    private LogContext() {
-    }
+    private LogContext() {}
 
     public static LogContext entity(String type, Object id) {
         return new LogContext().put(ENTITY, type).put(ENTITY_ID, id == null ? null : String.valueOf(id));

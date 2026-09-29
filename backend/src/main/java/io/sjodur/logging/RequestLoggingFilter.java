@@ -80,6 +80,8 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
     private static String currentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication instanceof JwtAuthenticationToken jwt ? jwt.getToken().getSubject() : null;
+        return authentication instanceof JwtAuthenticationToken jwt
+                ? jwt.getToken().getSubject()
+                : null;
     }
 }

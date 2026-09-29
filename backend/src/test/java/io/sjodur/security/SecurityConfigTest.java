@@ -55,11 +55,12 @@ class SecurityConfigTest {
     static class TestJwtDecoderConfiguration {
         @Bean
         JwtDecoder jwtDecoder() throws JOSEException {
-            NimbusJwtDecoder decoder = NimbusJwtDecoder.withPublicKey(KEY.toRSAPublicKey()).build();
+            NimbusJwtDecoder decoder =
+                    NimbusJwtDecoder.withPublicKey(KEY.toRSAPublicKey()).build();
             decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
                     JwtValidators.createDefault(),
-                    new JwtClaimValidator<Collection<String>>(JwtClaimNames.AUD,
-                            aud -> aud != null && aud.contains(AUDIENCE))));
+                    new JwtClaimValidator<Collection<String>>(
+                            JwtClaimNames.AUD, aud -> aud != null && aud.contains(AUDIENCE))));
             return decoder;
         }
     }
@@ -71,7 +72,9 @@ class SecurityConfigTest {
 
     @BeforeEach
     void setUp() {
-        mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+        mvc = MockMvcBuilders.webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
     }
 
     @Test
@@ -87,7 +90,8 @@ class SecurityConfigTest {
 
     @Test
     void validTokenIsAcceptedAndRolesAreMapped() throws Exception {
-        mvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, bearer(List.of("user"), AUDIENCE, Duration.ofMinutes(5))))
+        mvc.perform(get("/api/me")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(List.of("user"), AUDIENCE, Duration.ofMinutes(5))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sub").value("anna"))
                 .andExpect(jsonPath("$.email").value("anna@example.com"))
@@ -96,21 +100,27 @@ class SecurityConfigTest {
 
     @Test
     void tokenForAnotherAudienceIsRejected() throws Exception {
-        mvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, bearer(List.of("user"), "other-app", Duration.ofMinutes(5))))
+        mvc.perform(get("/api/me")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(List.of("user"), "other-app", Duration.ofMinutes(5))))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void expiredTokenIsRejected() throws Exception {
-        mvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, bearer(List.of("user"), AUDIENCE, Duration.ofMinutes(-5))))
+        mvc.perform(get("/api/me")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(List.of("user"), AUDIENCE, Duration.ofMinutes(-5))))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void adminEndpointRequiresAdminRole() throws Exception {
-        mvc.perform(get("/api/admin/ping").header(HttpHeaders.AUTHORIZATION, bearer(List.of("user"), AUDIENCE, Duration.ofMinutes(5))))
+        mvc.perform(get("/api/admin/ping")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(List.of("user"), AUDIENCE, Duration.ofMinutes(5))))
                 .andExpect(status().isForbidden());
-        mvc.perform(get("/api/admin/ping").header(HttpHeaders.AUTHORIZATION, bearer(List.of("user", "admin"), AUDIENCE, Duration.ofMinutes(5))))
+        mvc.perform(get("/api/admin/ping")
+                        .header(
+                                HttpHeaders.AUTHORIZATION,
+                                bearer(List.of("user", "admin"), AUDIENCE, Duration.ofMinutes(5))))
                 .andExpect(status().isOk());
     }
 
@@ -125,7 +135,8 @@ class SecurityConfigTest {
     }
 
     /** Builds a token shaped like Keycloak's: realm roles under realm_access.roles, profile claims, audience. */
-    private static String bearer(List<String> roles, String audience, Duration validFor, RSAKey key) throws JOSEException {
+    private static String bearer(List<String> roles, String audience, Duration validFor, RSAKey key)
+            throws JOSEException {
         Instant now = Instant.now();
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .subject("anna")
@@ -137,7 +148,8 @@ class SecurityConfigTest {
                 .claim("email", "anna@example.com")
                 .claim("realm_access", Map.of("roles", roles))
                 .build();
-        SignedJWT jwt = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(key.getKeyID()).build(), claims);
+        SignedJWT jwt = new SignedJWT(
+                new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(key.getKeyID()).build(), claims);
         jwt.sign(new RSASSASigner(key));
         return "Bearer " + jwt.serialize();
     }

@@ -36,11 +36,12 @@ public class SecurityConfig {
     @Order(1)
     SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
         http.securityMatcher("/api/**")
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/public/**").permitAll()
-                        .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakRolesConverter())))
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/public/**")
+                        .permitAll()
+                        .anyRequest()
+                        .authenticated())
+                .oauth2ResourceServer(
+                        oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(keycloakRolesConverter())))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(csrf -> csrf.disable());
         return http.build();
@@ -50,9 +51,11 @@ public class SecurityConfig {
     @Order(2)
     SecurityFilterChain managementSecurity(HttpSecurity http) throws Exception {
         http.securityMatcher("/actuator/**")
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
-                        .anyRequest().denyAll())
+                .authorizeHttpRequests(
+                        auth -> auth.requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info")
+                                .permitAll()
+                                .anyRequest()
+                                .denyAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(csrf -> csrf.disable());
         return http.build();
@@ -62,9 +65,11 @@ public class SecurityConfig {
     @Bean
     @Order(3)
     SecurityFilterChain defaultSecurity(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()
-                        .anyRequest().denyAll())
+        http.authorizeHttpRequests(
+                        auth -> auth.requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/error")
+                                .permitAll()
+                                .anyRequest()
+                                .denyAll())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(csrf -> csrf.disable());
         return http.build();

@@ -73,7 +73,9 @@ public class Messages {
     private String lookup(String key, Locale locale) {
         String language = supported(locale).getLanguage();
         String value = catalogs.getOrDefault(language, Map.of()).get(key);
-        if (value == null) value = catalogs.getOrDefault(DEFAULT_LOCALE.getLanguage(), Map.of()).get(key);
+        if (value == null)
+            value = catalogs.getOrDefault(DEFAULT_LOCALE.getLanguage(), Map.of())
+                    .get(key);
         return value != null ? value : key;
     }
 
@@ -83,7 +85,8 @@ public class Messages {
         StringBuilder out = new StringBuilder();
         while (matcher.find()) {
             Object value = params.get(matcher.group(1));
-            matcher.appendReplacement(out, Matcher.quoteReplacement(value != null ? String.valueOf(value) : matcher.group()));
+            matcher.appendReplacement(
+                    out, Matcher.quoteReplacement(value != null ? String.valueOf(value) : matcher.group()));
         }
         matcher.appendTail(out);
         return out.toString();

@@ -78,20 +78,25 @@ public class ApiExceptionHandler {
     /** Bean Validation annotation → catalog key: @NotBlank → validation.required, @Size → validation.size … */
     private Map<String, Object> fieldError(FieldError error) {
         String constraint = error.getCode() == null ? "invalid" : error.getCode();
-        String code = switch (constraint) {
-            case "NotNull", "NotBlank", "NotEmpty" -> "required";
-            case "Size", "Length" -> "size";
-            case "Min", "DecimalMin", "Positive", "PositiveOrZero" -> "min";
-            case "Max", "DecimalMax", "Negative", "NegativeOrZero" -> "max";
-            case "Email" -> "email";
-            default -> constraint.toLowerCase();
-        };
+        String code =
+                switch (constraint) {
+                    case "NotNull", "NotBlank", "NotEmpty" -> "required";
+                    case "Size", "Length" -> "size";
+                    case "Min", "DecimalMin", "Positive", "PositiveOrZero" -> "min";
+                    case "Max", "DecimalMax", "Negative", "NegativeOrZero" -> "max";
+                    case "Email" -> "email";
+                    default -> constraint.toLowerCase();
+                };
         Map<String, Object> params = constraintParams(error);
         return Map.of(
-                "field", error.getField(),
-                "code", code,
-                "params", params,
-                "message", messages.get("validation." + code, params));
+                "field",
+                error.getField(),
+                "code",
+                code,
+                "params",
+                params,
+                "message",
+                messages.get("validation." + code, params));
     }
 
     /** Extracts {min}, {max}, {value} from the constraint's arguments the way Bean Validation orders them. */

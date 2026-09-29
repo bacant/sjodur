@@ -13,8 +13,10 @@ class MessagesTest {
 
     @Test
     void translatesInBothLanguagesWithNamedPlaceholders() {
-        assertThat(messages.get("problem.not_found", Locale.GERMAN, Map.of())).isEqualTo("Der Eintrag wurde nicht gefunden.");
-        assertThat(messages.get("problem.not_found", Locale.ENGLISH, Map.of())).isEqualTo("The entry could not be found.");
+        assertThat(messages.get("problem.not_found", Locale.GERMAN, Map.of()))
+                .isEqualTo("Der Eintrag wurde nicht gefunden.");
+        assertThat(messages.get("problem.not_found", Locale.ENGLISH, Map.of()))
+                .isEqualTo("The entry could not be found.");
         assertThat(messages.get("validation.size", Locale.ENGLISH, Map.of("min", 2, "max", 50)))
                 .isEqualTo("Must be between 2 and 50 characters");
         assertThat(messages.get("problem.traceHint", Locale.GERMAN, Map.of("traceId", "abc")))
@@ -30,7 +32,8 @@ class MessagesTest {
 
     @Test
     void leavesUnknownPlaceholdersVisible() {
-        assertThat(Messages.interpolate("Hello {name}, {missing}", Map.of("name", "Anna"))).isEqualTo("Hello Anna, {missing}");
+        assertThat(Messages.interpolate("Hello {name}, {missing}", Map.of("name", "Anna")))
+                .isEqualTo("Hello Anna, {missing}");
     }
 
     @Test
