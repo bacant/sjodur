@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sjodur backend logging.
+
+  Profiles (spring.profiles.active):
+    local (default) - coloured console + rolling file under ./logs, DEBUG for io.sjodur, SQL visible
+    prod            - ECS JSON on stdout for the log pipeline (same field names as the frontend server)
+    prod,file       - additionally the rolling files (mount a volume at the log directory)
+    prod,mail       - additionally error digests by e-mail (DigestSmtpAppender)
+
+  Log directory: logging.file.path (env LOGGING_FILE_PATH), default "logs" relative to the working
+  directory. Files are only opened in the profiles that reference them.
+-->
+<configuration>
+
+    <conversionRule conversionWord="clr"
+                    converterClass="org.springframework.boot.logging.logback.ColorConverter"/>
+    <conversionRule conversionWord="wex"
+                    converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter"/>
+
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="sjodur"/>
+    <springProperty scope="context" name="mailHost" source="sjodur.logging.mail.host" defaultValue="localhost"/>
+    <springProperty scope="context" name="mailPort" source="sjodur.logging.mail.port" defaultValue="25"/>
+    <springProperty scope="context" name="mailTo"   source="sjodur.logging.mail.to"   defaultValue="ops@localhost"/>
+    <springProperty scope="context" name="mailFrom" source="sjodur.logging.mail.from" defaultValue="sjodur@localhost"/>
+
+    <property name="logDir"   value="${LOG_PATH:-logs}"/>
+    <property name="maxSize"  value="200MB"/>
+    <property name="history"  value="60"/>
+    <property name="totalCap" value="5GB"/>
+
+    <!--
+      MDC fields: client.ip and user.id from RequestLoggingFilter, traceId from Micrometer Tracing,
+      entity / entity.id from LogContext. Missing keys render empty, so the brackets stay aligned.
+    -->
+    <property name="consolePattern"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%X{client.ip}|%X{user.id}]){faint} %clr(%5p) %clr([%X{traceId}]){magenta} %clr([%t]){faint} %clr([%X{entity}|%X{entity.id}]){faint} %clr(%logger{0}){cyan} %clr(:){faint} %m%n%wex"/>
+    <property name="filePattern"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{client.ip}|%X{user.id}] %5p [%X{traceId}] [%t] [%X{entity}|%X{entity.id}] %logger{0}: %m%n%wex"/>
+
+    <!-- ==================== APPENDERS ==================== -->
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${consolePattern}</pattern>
+        </encoder>
+    </appender>
+
+    <springProfile name="!prod | file">
+
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${logDir}/${appName}.log</file>
+            <encoder>
+                <charset>UTF-8</charset>
+                <pattern>${filePattern}</pattern>
+            </encoder>
+            <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                <fileNamePattern>${logDir}/${appName}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                <maxFileSize>${maxSize}</maxFileSize>
+                <maxHistory>${history}</maxHistory>
+                <totalSizeCap>${totalCap}</totalSizeCap>
+            </rollingPolicy>
+        </appender>
+
+        <!--
+          One extra file per long-running job: LogContext.file("import-42") puts "logfile" into the
+          MDC, everything logged inside lands in logs/sjodur.import-42.log as well. Events without
+          the key are dropped here (MdcPresentFilter), so nothing is duplicated into a default file.
+        -->
+        <appender name="SIFT" class="ch.qos.logback.classic.sift.SiftingAppender">
+            <filter class="io.sjodur.logging.MdcPresentFilter">
+                <key>logfile</key>
+            </filter>
+            <discriminator class="ch.qos.logback.classic.sift.MDCBasedDiscriminator">
+                <key>logfile</key>
+                <defaultValue>unknown</defaultValue>
+            </discriminator>
+            <sift>
+                <appender name="SIFT-${logfile}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                    <file>${logDir}/${appName}.${logfile}.log</file>
+                    <encoder>
+                        <charset>UTF-8</charset>
+                        <pattern>${filePattern}</pattern>
+                    </encoder>
+                    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+                        <fileNamePattern>${logDir}/${appName}.${logfile}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                        <maxFileSize>${maxSize}</maxFileSize>
+                        <maxHistory>${history}</maxHistory>
+                    </rollingPolicy>
+                </appender>
+            </sift>
+        </appender>
+
+    </springProfile>
+
+    <springProfile name="prod">
+        <!-- Spring Boot's structured encoder: ECS JSON, service.* from logging.structured.ecs.service.* -->
+        <appender name="STDOUT_JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="org.springframework.boot.logging.logback.StructuredLogEncoder">
+                <format>ecs</format>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <springProfile name="prod &amp; mail">
+        <!-- One digest mail per interval instead of one mail per error; see DigestSmtpAppender. -->
+        <appender name="EMAIL" class="io.sjodur.logging.DigestSmtpAppender">
+            <smtpHost>${mailHost}</smtpHost>
+            <smtpPort>${mailPort}</smtpPort>
+            <to>${mailTo}</to>
+            <from>${mailFrom}</from>
+            <subject>[${appName}] ${HOSTNAME}: %level in %logger{0}</subject>
+            <interval>5 minutes</interval>
+            <maxEvents>50</maxEvents>
+            <layout class="ch.qos.logback.classic.PatternLayout">
+                <pattern>${filePattern}</pattern>
+            </layout>
+        </appender>
+    </springProfile>
+
+    <!-- ==================== LEVELS (both profiles) ==================== -->
+
+    <logger name="http.request"      level="INFO"/>
+    <logger name="org.apache"        level="WARN"/>
+    <logger name="org.hibernate"     level="WARN"/>
+    <logger name="org.flywaydb"      level="INFO"/>
+    <logger name="com.zaxxer.hikari" level="INFO"/>
+    <logger name="org.testcontainers" level="INFO"/>
+
+    <!-- ==================== LOCAL / TEST ==================== -->
+
+    <springProfile name="!prod">
+
+        <logger name="io.sjodur"                                         level="DEBUG"/>
+        <logger name="org.springframework"                               level="INFO"/>
+        <logger name="org.springframework.boot.docker.compose"           level="INFO"/>
+        <logger name="org.hibernate.SQL"                                 level="DEBUG"/>
+        <!-- bound parameters, very chatty: -->
+        <!-- <logger name="org.hibernate.orm.jdbc.bind"                  level="TRACE"/> -->
+        <!-- OIDC path: without these two the token validation is invisible while security sits at INFO. -->
+        <logger name="org.springframework.security.oauth2.server.resource" level="DEBUG"/>
+        <logger name="org.springframework.security.web.FilterChainProxy"   level="DEBUG"/>
+
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="SIFT"/>
+        </root>
+
+    </springProfile>
+
+    <!-- ==================== PRODUCTION ==================== -->
+
+    <springProfile name="prod">
+
+        <logger name="io.sjodur"               level="INFO"/>
+        <logger name="org.springframework"     level="WARN"/>
+        <logger name="org.springframework.boot" level="INFO"/>
+
+        <root level="INFO">
+            <appender-ref ref="STDOUT_JSON"/>
+        </root>
+
+    </springProfile>
+
+    <springProfile name="prod &amp; file">
+        <root>
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="SIFT"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod &amp; mail">
+        <root>
+            <appender-ref ref="EMAIL"/>
+        </root>
+    </springProfile>
+
+</configuration>

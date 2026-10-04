@@ -1,0 +1,6 @@
+rootProject.name = 'sjodur'
+
+// The backend stays a self-contained Gradle build (own settings.gradle and wrapper),
+// so `cd backend && ./gradlew ...` and the CI job keep working. From here it is used
+// as a composite build; its tasks are addressed as gradle.includedBuild('backend').task(':name').
+includeBuild 'backend'

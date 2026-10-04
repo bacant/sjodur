@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Sjodur design tokens
+   Brand colours from docs/brand/LIESMICH.txt. Every colour used in the UI is
+   defined here once; components only use the utility classes derived from it
+   (bg-navy, text-glacier, bg-ground, text-ink, ...).
+   --------------------------------------------------------------------------- */
+
+@theme {
+  /* Typography – Schibsted Grotesk is self-hosted via @fontsource-variable (imported in pages/+Head.vue). */
+  --font-sans: "Schibsted Grotesk Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Core brand colours */
+  --color-navy: #101b2e; /* Nachtblau – icon, text, primary surfaces */
+  --color-ivory: #f3f0e8; /* Elfenbein – light ground */
+  --color-glacier: #2a9d8f; /* Gletscher – accent, actions, gains */
+  --color-glacier-deep: #1f7d72; /* darker accent for text on light tints */
+  --color-fjord: #3e4a5e; /* secondary text, icons */
+
+  /* Surfaces and lines */
+  --color-mist: #d9d4c7; /* lines, dividers, borders */
+  --color-ice: #dcefec; /* highlights, chips */
+  --color-deepsea: #0b1424; /* dark ground */
+  --color-slate: #1a2740; /* dark cards and surfaces */
+
+  /* Semantic colours – gains/expenses are distinguishable for colour-blind users (teal vs. amber, never red vs. green) */
+  --color-amber: #c8862b; /* expenses, minus */
+  --color-amber-tint: #f4e6cf;
+  --color-amber-deep: #8a5a15;
+  --color-coral: #c9573f; /* errors, warnings */
+
+  /* Radii and shadows used across the app */
+  --radius-card: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(16 27 46 / 0.06), 0 8px 24px rgb(16 27 46 / 0.06);
+}
+
+/* Semantic tokens that switch with the colour scheme. `@theme inline` keeps
+   the reference to the CSS variable, so bg-ground/text-ink follow dark mode. */
+@theme inline {
+  --color-ground: var(--sj-ground);
+  --color-surface: var(--sj-surface);
+  --color-ink: var(--sj-ink);
+  --color-muted: var(--sj-muted);
+  --color-line: var(--sj-line);
+}
+
+:root {
+  color-scheme: light dark;
+  --sj-ground: var(--color-ivory);
+  --sj-surface: #ffffff;
+  --sj-ink: var(--color-navy);
+  --sj-muted: var(--color-fjord);
+  --sj-line: var(--color-mist);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sj-ground: var(--color-deepsea);
+    --sj-surface: var(--color-slate);
+    --sj-ink: var(--color-ivory);
+    --sj-muted: #b3bccb;
+    --sj-line: #2c3b57;
+  }
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+  }
+  body {
+    @apply bg-ground text-ink antialiased;
+  }
+  h1 {
+    @apply text-4xl font-bold tracking-tight;
+  }
+  h2 {
+    @apply text-2xl font-bold tracking-tight;
+  }
+  a {
+    @apply text-glacier-deep underline-offset-4 hover:underline;
+  }
+  /* Amounts always use tabular figures so columns line up. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Page transition (see pages/+onPageTransitionStart.ts) */
+#page-content {
+  transition: opacity 0.2s ease-in-out;
+}
+body.page-transition #page-content {
+  opacity: 0.4;
+}

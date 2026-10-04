@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: sjodur
+  profiles:
+    default: local            # applies unless SPRING_PROFILES_ACTIVE is set
+  docker:
+    compose:
+      file: ../infra/docker-compose.yml
+      lifecycle-management: start-only   # keep the database and Keycloak running when the app stops
+  datasource:
+    url: ${SJODUR_DB_URL:jdbc:postgresql://localhost:5432/sjodur}
+    username: ${SJODUR_DB_USER:sjodur}
+    password: ${SJODUR_DB_PASSWORD:sjodur}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate      # the schema comes from Flyway migrations only
+  flyway:
+    enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Must match the "iss" claim of the tokens exactly (see docs/auth.md on the issuer pitfall).
+          issuer-uri: ${SJODUR_OIDC_ISSUER:http://localhost:8081/realms/sjodur}
+          # Tokens without this audience are rejected; Keycloak adds it through the audience mapper.
+          audiences: sjodur-api
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  tracing:
+    sampling:
+      probability: 1.0        # every request gets a trace id (sampling only matters once spans are exported)
+
+# Logging is configured in logback-spring.xml (appenders, levels per profile).
+# logging.file.path is the log directory for the file appenders; relative paths resolve against
+# the working directory (backend/ with ./gradlew bootRun). Override with LOGGING_FILE_PATH.
+logging:
+  file:
+    path: logs
