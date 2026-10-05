@@ -16,7 +16,7 @@ importers:
         version: 0.4.18(hono@4.13.10)(srvx@0.12.8)
       '@vikejs/hono':
         specifier: ^0.2.1
-        version: 0.2.1(hono@4.13.10)(srvx@0.12.8)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)))
+        version: 0.2.1(hono@4.13.10)(srvx@0.12.8)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)))
       hono:
         specifier: ^4.13.1
         version: 4.13.10
@@ -34,13 +34,13 @@ importers:
         version: 10.3.1
       vike:
         specifier: ^0.4.260
-        version: 0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
+        version: 0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
       vike-vue:
         specifier: ^0.9.13
-        version: 0.9.15(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3))
+        version: 0.9.15(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3))
       vike-vue-pinia:
         specifier: ^0.2.6
-        version: 0.2.6(pinia@4.0.3(@vue/devtools-api@6.6.4)(typescript@6.0.3)(vue@3.5.43(typescript@6.0.3)))(vike-vue@0.9.15(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3)))(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3))
+        version: 0.2.6(pinia@4.0.3(@vue/devtools-api@6.6.4)(typescript@6.0.3)(vue@3.5.43(typescript@6.0.3)))(vike-vue@0.9.15(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3)))(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3))
       vue:
         specifier: ^3.5.41
         version: 3.5.43(typescript@6.0.3)
@@ -56,13 +56,13 @@ importers:
         version: 1.63.0
       '@tailwindcss/vite':
         specifier: ^4.3.3
-        version: 4.3.3(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
+        version: 4.3.3(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
       '@types/node':
-        specifier: ^22.20.4
-        version: 22.20.4
+        specifier: ^26.6.4
+        version: 26.6.4
       '@vitejs/plugin-vue':
         specifier: ^6.0.8
-        version: 6.0.9(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))(vue@3.5.43(typescript@6.0.3))
+        version: 6.0.9(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))(vue@3.5.43(typescript@6.0.3))
       '@vue/test-utils':
         specifier: ^2.5.1
         version: 2.5.1(@vue/compiler-dom@3.5.43)(@vue/server-renderer@3.5.43)(vue@3.5.43(typescript@6.0.3))
@@ -107,10 +107,10 @@ importers:
         version: 8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@6.0.3)
       vite:
         specifier: ^8.2.1
-        version: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)
+        version: 8.3.1(@types/node@26.6.4)(jiti@2.7.0)
       vitest:
         specifier: ^5.0.2
-        version: 5.0.2(@types/node@22.20.4)(happy-dom@20.14.5)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
+        version: 5.0.2(@types/node@26.6.4)(happy-dom@20.14.5)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
       vue-eslint-parser:
         specifier: ^10.4.1
         version: 10.4.1(eslint@9.39.5(jiti@2.7.0))
@@ -638,11 +638,8 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
-  '@types/node@20.19.43':
-    resolution: {integrity: sha512-6oYBAi5ikg4Pl+kGsoYtawUMBT2zZMCvPNF7pVLnHZfd1zf38DRiWn/gT01RYCdUqkv7Fhr+C9ot4/tb+2sVvA==}
-
-  '@types/node@22.20.4':
-    resolution: {integrity: sha512-zJRE40jpHtKqE/C4fgHrAKQLJuSpzEnP9ff9Y7YtoR3Wd2pwqzlekDeEuUQXjRd+QCYnVnNwuJYmhdk9XV8gvA==}
+  '@types/node@26.6.4':
+    resolution: {integrity: sha512-ldVPDCzj7fsaGZrLB0NuHuTvJcsNasysBAqMolr/cgxrLd1xbqxIr3XJiPnHHJUCxj5sNF1vnRj9aWnrVh5Jcg==}
 
   '@types/whatwg-mimetype@3.0.2':
     resolution: {integrity: sha512-c2AKvDT8ToxLIOUlN51gTiHXflsfIFisS4pO7pDPoKouJCESkhZnEy623gwP9laCy5lnLDAw1vAzu2vM2YLOrA==}
@@ -1840,8 +1837,8 @@ packages:
   ufo@1.6.4:
     resolution: {integrity: sha512-JFNbkD1Svwe0KvGi8GOeLcP4kAWQ609twvCdcHxq1oSL8svv39ZuSvajcD8B+5D0eL4+s1Is2D/O6KN3qcTeRA==}
 
-  undici-types@6.21.0:
-    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+  undici-types@8.9.0:
+    resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
   unplugin@2.3.11:
     resolution: {integrity: sha512-5uKD0nqiYVzlmCRs01Fhs2BdkEgBS3SAVP6ndrBsuK42iC2+JHyxM05Rm9G8+5mkmRtzMZGY8Ct5+mliZxU/Ww==}
@@ -2458,12 +2455,12 @@ snapshots:
       '@tailwindcss/oxide-win32-arm64-msvc': 4.3.3
       '@tailwindcss/oxide-win32-x64-msvc': 4.3.3
 
-  '@tailwindcss/vite@4.3.3(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))':
+  '@tailwindcss/vite@4.3.3(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))':
     dependencies:
       '@tailwindcss/node': 4.3.3
       '@tailwindcss/oxide': 4.3.3
       tailwindcss: 4.3.3
-      vite: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)
+      vite: 8.3.1(@types/node@26.6.4)(jiti@2.7.0)
 
   '@tybys/wasm-util@0.10.4':
     dependencies:
@@ -2483,19 +2480,15 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
-  '@types/node@20.19.43':
+  '@types/node@26.6.4':
     dependencies:
-      undici-types: 6.21.0
-
-  '@types/node@22.20.4':
-    dependencies:
-      undici-types: 6.21.0
+      undici-types: 8.9.0
 
   '@types/whatwg-mimetype@3.0.2': {}
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 26.6.4
 
   '@typescript-eslint/eslint-plugin@8.71.0(@typescript-eslint/parser@8.71.0(eslint@9.39.5(jiti@2.7.0))(typescript@6.0.3))(eslint@9.39.5(jiti@2.7.0))(typescript@6.0.3)':
     dependencies:
@@ -2588,20 +2581,20 @@ snapshots:
       '@typescript-eslint/types': 8.71.0
       eslint-visitor-keys: 5.0.1
 
-  '@universal-deploy/netlify@0.2.3(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))':
+  '@universal-deploy/netlify@0.2.3(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))':
     dependencies:
       '@universal-deploy/store': 0.2.2(srvx@0.12.8)
-      vite: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)
+      vite: 8.3.1(@types/node@26.6.4)(jiti@2.7.0)
     transitivePeerDependencies:
       - srvx
 
-  '@universal-deploy/node@0.1.12(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))':
+  '@universal-deploy/node@0.1.12(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))':
     dependencies:
       '@universal-deploy/store': 0.2.2(srvx@0.12.8)
       magic-string: 0.30.21
       srvx: 0.12.8
     optionalDependencies:
-      vite: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)
+      vite: 8.3.1(@types/node@26.6.4)(jiti@2.7.0)
 
   '@universal-deploy/store@0.2.2(srvx@0.12.8)':
     dependencies:
@@ -2609,16 +2602,16 @@ snapshots:
     optionalDependencies:
       srvx: 0.12.8
 
-  '@universal-deploy/vite@0.1.14(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))':
+  '@universal-deploy/vite@0.1.14(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))':
     dependencies:
-      '@universal-deploy/netlify': 0.2.3(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
-      '@universal-deploy/node': 0.1.12(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
+      '@universal-deploy/netlify': 0.2.3(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
+      '@universal-deploy/node': 0.1.12(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
       '@universal-deploy/store': 0.2.2(srvx@0.12.8)
       '@universal-middleware/express': 0.4.31(hono@4.13.10)(srvx@0.12.8)
       magic-string: 0.30.21
       rou3: 0.8.1
     optionalDependencies:
-      vite: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)
+      vite: 8.3.1(@types/node@26.6.4)(jiti@2.7.0)
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
       - '@hattip/core'
@@ -2681,11 +2674,11 @@ snapshots:
       - hono
       - srvx
 
-  '@vikejs/hono@0.2.1(hono@4.13.10)(srvx@0.12.8)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)))':
+  '@vikejs/hono@0.2.1(hono@4.13.10)(srvx@0.12.8)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)))':
     dependencies:
       '@universal-middleware/hono': 0.4.21(hono@4.13.10)(srvx@0.12.8)
       hono: 4.13.10
-      vike: 0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
+      vike: 0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
       - '@hattip/core'
@@ -2696,20 +2689,20 @@ snapshots:
       - h3
       - srvx
 
-  '@vitejs/plugin-vue@6.0.9(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))(vue@3.5.43(typescript@6.0.3))':
+  '@vitejs/plugin-vue@6.0.9(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))(vue@3.5.43(typescript@6.0.3))':
     dependencies:
       '@rolldown/pluginutils': 1.0.1
-      vite: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)
+      vite: 8.3.1(@types/node@26.6.4)(jiti@2.7.0)
       vue: 3.5.43(typescript@6.0.3)
 
-  '@vitest/mocker@5.0.2(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))':
+  '@vitest/mocker@5.0.2(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       '@vitest/spy': 5.0.2
       estree-walker: 3.0.3
       magic-string: 1.4.2
     optionalDependencies:
-      vite: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)
+      vite: 8.3.1(@types/node@26.6.4)(jiti@2.7.0)
 
   '@vitest/spy@5.0.2': {}
 
@@ -2834,7 +2827,7 @@ snapshots:
 
   buffer-image-size@0.6.4:
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 26.6.4
 
   cac@6.7.14: {}
 
@@ -3096,7 +3089,7 @@ snapshots:
 
   happy-dom@20.14.5:
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 26.6.4
       '@types/whatwg-mimetype': 3.0.2
       '@types/ws': 8.18.1
       buffer-image-size: 0.6.4
@@ -3670,7 +3663,7 @@ snapshots:
 
   ufo@1.6.4: {}
 
-  undici-types@6.21.0: {}
+  undici-types@8.9.0: {}
 
   unplugin@2.3.11:
     dependencies:
@@ -3691,25 +3684,25 @@ snapshots:
 
   util-deprecate@1.0.2: {}
 
-  vike-vue-pinia@0.2.6(pinia@4.0.3(@vue/devtools-api@6.6.4)(typescript@6.0.3)(vue@3.5.43(typescript@6.0.3)))(vike-vue@0.9.15(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3)))(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3)):
+  vike-vue-pinia@0.2.6(pinia@4.0.3(@vue/devtools-api@6.6.4)(typescript@6.0.3)(vue@3.5.43(typescript@6.0.3)))(vike-vue@0.9.15(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3)))(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3)):
     dependencies:
       pinia: 4.0.3(@vue/devtools-api@6.6.4)(typescript@6.0.3)(vue@3.5.43(typescript@6.0.3))
-      vike: 0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
-      vike-vue: 0.9.15(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3))
+      vike: 0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
+      vike-vue: 0.9.15(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3))
       vue: 3.5.43(typescript@6.0.3)
 
-  vike-vue@0.9.15(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3)):
+  vike-vue@0.9.15(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)))(vue@3.5.43(typescript@6.0.3)):
     dependencies:
       magic-string: 0.30.21
       oxc-parser: 0.104.0(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)
       oxc-walker: 0.6.0(oxc-parser@0.104.0(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3))
-      vike: 0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
+      vike: 0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
       vue: 3.5.43(typescript@6.0.3)
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
 
-  vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)):
+  vike@0.4.267(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)):
     dependencies:
       '@babel/core': 7.29.7
       '@babel/types': 7.29.8
@@ -3718,7 +3711,7 @@ snapshots:
       '@brillout/picocolors': 1.0.31
       '@brillout/vite-plugin-server-entry': 0.7.21
       '@universal-deploy/store': 0.2.2(srvx@0.12.8)
-      '@universal-deploy/vite': 0.1.14(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
+      '@universal-deploy/vite': 0.1.14(hono@4.13.10)(srvx@0.12.8)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
       '@universal-middleware/core': 0.4.18(hono@4.13.10)(srvx@0.12.8)
       '@universal-middleware/node': 0.2.2(hono@4.13.10)(srvx@0.12.8)
       cac: 6.7.14
@@ -3732,9 +3725,9 @@ snapshots:
       sirv: 3.0.2
       source-map-support: 0.5.21
       tinyglobby: 0.2.17
-      vite-plugin-wrapper: 0.1.1(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
+      vite-plugin-wrapper: 0.1.1(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
     optionalDependencies:
-      vite: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)
+      vite: 8.3.1(@types/node@26.6.4)(jiti@2.7.0)
     transitivePeerDependencies:
       - '@cloudflare/workers-types'
       - '@hattip/core'
@@ -3747,11 +3740,11 @@ snapshots:
       - srvx
       - supports-color
 
-  vite-plugin-wrapper@0.1.1(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)):
+  vite-plugin-wrapper@0.1.1(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)):
     dependencies:
-      vite: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)
+      vite: 8.3.1(@types/node@26.6.4)(jiti@2.7.0)
 
-  vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0):
+  vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -3759,14 +3752,14 @@ snapshots:
       rolldown: 1.2.11
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 22.20.4
+      '@types/node': 26.6.4
       fsevents: 2.3.3
       jiti: 2.7.0
 
-  vitest@5.0.2(@types/node@22.20.4)(happy-dom@20.14.5)(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0)):
+  vitest@5.0.2(@types/node@26.6.4)(happy-dom@20.14.5)(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.0.2(vite@8.3.1(@types/node@22.20.4)(jiti@2.7.0))
+      '@vitest/mocker': 5.0.2(vite@8.3.1(@types/node@26.6.4)(jiti@2.7.0))
       chai: 6.2.2
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
@@ -3777,10 +3770,10 @@ snapshots:
       tinybench: 6.2.0
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
-      vite: 8.3.1(@types/node@22.20.4)(jiti@2.7.0)
+      vite: 8.3.1(@types/node@26.6.4)(jiti@2.7.0)
       why-is-node-running: 3.2.2
     optionalDependencies:
-      '@types/node': 22.20.4
+      '@types/node': 26.6.4
       happy-dom: 20.14.5
     transitivePeerDependencies:
       - msw
