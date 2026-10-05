@@ -119,3 +119,10 @@ tasks.named('clean') {
     dependsOn backend.task(':clean')
     delete frontendDir.dir('dist')
 }
+
+
+tasks.register('infraDown', Exec) {
+    group = 'sjodur'
+    description = 'Stops and removes the local infrastructure containers (data volumes stay).'
+    commandLine 'docker', 'compose', '-f', 'infra/docker-compose.yml', 'down'
+}

@@ -32,8 +32,8 @@ services:
     ports:
       - "8081:8081"
     volumes:
+      - keycloak-data:/opt/keycloak/data
       - ./keycloak/realm-sjodur.json:/opt/keycloak/data/import/realm-sjodur.json:ro
-      - keycloak-data:/opt/keycloak/data/h2
 
   # Session store for the frontend in production-like setups; the dev server uses memory unless REDIS_URL is set.
   redis:
